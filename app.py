@@ -68,7 +68,7 @@ def info_residence(which):
 
 def mix_fee():
 	st.markdown("### Investments")
-	df = pd.read_csv('mix_fee_assets.csv', index_col=0, usecols=range(0, 5))
+	df = pd.read_csv('mix_fee_assets.csv', index_col=0, usecols=range(0, 5), engine='openpyxl')
 	d_investments = {}
 	col_mf1, col_mf2 = st.beta_columns(2)
 	col_mf3, col_mf4 = st.beta_columns(2)
