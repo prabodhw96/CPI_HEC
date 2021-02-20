@@ -5,4 +5,3 @@ seaborn
 numba
 streamlit==0.69
 cpr-rsi
-openpyxl
