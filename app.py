@@ -34,16 +34,48 @@ def debts():
 				'a car loan':'car_loan', 'a credit line':'credit_line', 'other debt':'other_debt'}
 	l_debts = ['credit_card', 'personal_loan', 'student_loan', 'car_loan', 'credit_line', 'other_debt']
 	l_names = ['credit card debt', 'a personal loan', 'a student loan', 'a car loan', 'a credit line', 'other debt']
-	dbt = st.multiselect("Select your debts", l_names, default=['credit card debt'])
 
-	dbt_user = dbt.copy()
-	dbt_user.reverse()
-	dbt_user_key = [dbt_dict[i] for i in dbt_user]
-	for debt_name, debt in zip(dbt_user, dbt_user_key):
-		debt_name_str = "### "+debt_name
-		st.markdown(debt_name_str)
-		d_debts[debt] = st.number_input("Amount", step=0.5, key="debt_"+debt_name)
-		d_debts[f'{debt}_payment'] = st.number_input("Current monthly payment", step=0.5, key="debt_payment_"+debt_name, max_value=d_debts[debt])
+	st.markdown("### Credit card debt")
+	colccd1, colccd2 = st.beta_columns(2)
+	with colccd1:
+		d_debts["credit_card"] = st.number_input("Amount", step=0.5, key="debt_credit_card")
+	with colccd2:
+		d_debts["credit_card_payment"] = st.number_input("Current monthly payment", step=0.5, key="debt_payment_credit_card", max_value=d_debts["credit_card"])
+
+	st.markdown("### Personal Loan")
+	colpl1, colpl2 = st.beta_columns(2)
+	with colpl1:
+		d_debts["personal_loan"] = st.number_input("Amount", step=0.5, key="debt_personal_loan")
+	with colpl2:
+		d_debts["personal_loan_payment"] = st.number_input("Current monthly payment", step=0.5, key="debt_payment_personal_loan", max_value=d_debts["personal_loan"])
+
+	st.markdown("### Student Loan")
+	colsl1, colsl2 = st.beta_columns(2)
+	with colsl1:
+		d_debts["student_loan"] = st.number_input("Amount", step=0.5, key="debt_student_loan")
+	with colsl2:
+		d_debts["student_loan_payment"] = st.number_input("Current monthly payment", step=0.5, key="debt_payment_student_loan", max_value=d_debts["student_loan"])
+
+	st.markdown("### Car Loan")
+	colcl1, colcl2 = st.beta_columns(2)
+	with colcl1:
+		d_debts["car_loan"] = st.number_input("Amount", step=0.5, key="debt_car_loan")
+	with colcl2:
+		d_debts["car_loan_payment"] = st.number_input("Current monthly payment", step=0.5, key="debt_payment_car_loan", max_value=d_debts["car_loan"])
+
+	st.markdown("### Credit Line")
+	colcline1, colcline2 = st.beta_columns(2)
+	with colcline1:
+		d_debts["credit_line"] = st.number_input("Amount", step=0.5, key="debt_credit_line")
+	with colcline2:
+		d_debts["credit_line_payment"] = st.number_input("Current monthly payment", step=0.5, key="debt_payment_credit_line", max_value=d_debts["credit_line"])
+
+	st.markdown("### Other debt")
+	colod1, colod2 = st.beta_columns(2)
+	with colod1:
+		d_debts["other_debt"] = st.number_input("Amount", step=0.5, key="debt_other_debt")
+	with colod2:
+		d_debts["other_debt_payment"] = st.number_input("Current monthly payment", step=0.5, key="debt_payment_other_debt", max_value=d_debts["other_debt"])
 
 	return d_debts
 
@@ -157,42 +189,58 @@ def info_hh():
 
 def fin_accounts(which):
 	d_fin = {}
+	st.markdown("### Savings account")
 
-	st.markdown("### Savings accounts")
+	st.markdown("### RRSP")
+	colrrsp1, colrrsp2 = st.beta_columns(2)
+	colrrsp3, colrrsp4 = st.beta_columns(2)
+	with colrrsp1:
+		d_fin["bal_rrsp"] = st.number_input("Amount in RRSP account", step=0.5, key="bal_rrsp_"+which)
+	with colrrsp2:
+		d_fin["cont_rate_rrsp"] = st.slider("Fraction of your earnings you plan to save in your RRSP account (in %)", min_value=0.0, max_value=100.0, step=0.5, value=10.0, key="cont_rate_rrsp_"+which)
+	with colrrsp3:
+		d_fin["withdrawal_rrsp"] = st.number_input("Amount of your RRSP account you plan to spend (in %)", key="withdrawal_rrsp_"+which)
+	with colrrsp4:
+		d_fin["init_room_rrsp"] = st.number_input("Current contribution room for RRSP", key="init_room_rrsp_"+which)
 
-	st.write("### Unregistered account")
+	st.markdown("### TFSA")
+	coltfsa1, coltfsa2 = st.beta_columns(2)
+	coltfsa3, coltfsa4 = st.beta_columns(2)
+	with coltfsa1:
+		d_fin["bal_tfsa"] = st.number_input("Amount in TFSA account", step=0.5, key="bal_tfsa_"+which)
+	with coltfsa2:
+		d_fin["cont_rate_tfsa"] = st.slider("Fraction of your earnings you plan to save in your TFSA account (in %)", min_value=0.0, max_value=100.0, step=0.5, value=10.0, key="cont_rate_tfsa_"+which)
+	with coltfsa3:
+		d_fin["withdrawal_tfsa"] = st.number_input("Amount of your TFSA account you plan to spend (in %)", key="withdrawal_tfsa_"+which)
+	with coltfsa4:
+		d_fin["init_room_tfsa"] = st.number_input("Current contribution room for TFSA", key="init_room_tfsa_"+which)
+
+	st.markdown("### Other Reg")
+	coloreg1, coloreg2 = st.beta_columns(2)
+	coloreg3, coloreg4 = st.beta_columns(2)
+	with coloreg1:
+		d_fin["bal_other_reg"] = st.number_input("Amount in Other Reg account", step=0.5, key="bal_other_reg_"+which)
+	with coloreg2:
+		d_fin["cont_rate_other_reg"] = st.slider("Fraction of your earnings you plan to save in your Other Reg account (in %)", min_value=0.0, max_value=100.0, step=0.5, value=10.0, key="cont_rate_other_reg_"+which)
+	with coloreg3:
+		d_fin["withdrawal_other_reg"] = st.number_input("Amount of your Other Reg account you plan to spend (in %)", key="withdrawal_other_reg_"+which)
+
+	st.markdown("### Unreg")
+	colureg1, colureg2 = st.beta_columns(2)
+	colureg3, colureg4 = st.beta_columns(2)
+	with colureg1:
+		d_fin["bal_unreg"] = st.number_input("Amount in Unreg account", step=0.5, key="bal_unreg_"+which)
+	with colureg2:
+		d_fin["cont_rate_unreg"] = st.slider("Fraction of your earnings you plan to save in your Unreg account (in %)", min_value=0.0, max_value=100.0, step=0.5, value=10.0, key="cont_rate_unreg_"+which)
+	with colureg3:
+		d_fin["withdrawal_unreg"] = st.number_input("Amount of your Unreg account you plan to spend (in %)", key="withdrawal_unreg_"+which)
+
+	st.markdown("### Gains and Losses in Unregistered Account")
 	colf1, colf2 = st.beta_columns(2)
 	with colf1:
 		d_fin['cap_gains_unreg'] = st.number_input("Current capital gains on unregistered account", step=0.5, key="cap_gains_unreg_"+which)
 	with colf2:
 		d_fin['realized_losses_unreg'] = st.number_input("Current realized losses in capital on unregistered account", step=0.5, key="realized_losses_unreg_"+which)
-
-	acc_list = ['rrsp', 'tfsa', 'other_reg', 'unreg']
-	#acc_list = st.multiselect("Select savings account", ['rrsp', 'tfsa', 'other_reg', 'unreg'], key="acc_"+which)
-	#acc_list_user = acc_list.copy()
-	#acc_list_user.reverse()
-	for acc in acc_list:
-		acc_str = "### "+str(acc)
-		st.markdown(acc_str)
-		bal_acc = "bal_" + acc
-		bal_str = "Amount in "+acc+"account"
-		d_fin[bal_acc] = st.number_input(bal_str, step=0.5, key=bal_acc+which)
-
-		cont_rate_acc = "cont_rate_"+acc
-		_, sv, _ = st.beta_columns([0.01, 0.98, 0.01])
-		with sv:
-			cont_rate_str = "Fraction of your earnings you plan to save in your "+acc+" account (in %)"
-			d_fin[cont_rate_acc] = st.slider(cont_rate_str, min_value=0.00, max_value=100.00, step=0.5, key=cont_rate_acc+which, value=10.00)
-		d_fin[cont_rate_acc] /= 100
-
-		withdrawal_acc = "withdrawal_"+acc
-		withdrawal_str = "Amount of your "+acc+" you plan to spend (in $)"
-		d_fin[withdrawal_acc] = st.number_input(withdrawal_str, key=withdrawal_acc+which)
-
-		if acc in ['rrsp', 'tfsa']:
-			init_room_acc = "init_room_"+acc
-			init_room_str = "Current contribution room for "+acc
-			d_fin[init_room_acc] = st.number_input(init_room_str, key=init_room_acc+which)
 
 	return d_fin
 
