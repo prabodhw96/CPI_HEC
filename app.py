@@ -273,22 +273,32 @@ def info_spouse(which='first'):
 	if savings_plan == "Yes":
 		d.update(fin_accounts(which=which))
 
+	# db pension
 	db_pension = st.radio("Will you receive a DB pension from your current or previous employer", ["Yes", "No"], key="db_pension_"+which, index=1)
 	if db_pension == "Yes":
 		st.markdown("### DB Pension")
-		d['replacement_rate_db'] = st.slider("Replacement rate of current DB (in %)", min_value=0.00, max_value=100.00, step=0.5, key="replacement_rate_db_"+which, value=10.00)
+		# lower and upper bound for pension
+		low_replacement_rate = min(0.02 * (d['ret_age'] - (2018 - d['byear'])), 0.70)
+    	high_replacement_rate = min(0.02 * (d['ret_age'] - 18), 0.70)
+    	return np.clip(row['replacement_rate_db'], low_b, high_b)
+		d['replacement_rate_db'] = st.slider("Replacement rate of current DB (in %)", min_value=low_replacement_rate, max_value=high_replacement_rate,
+											 step=0.5, key="replacement_rate_db_"+which, value=(low_replacement_rate - high_replacement_rate) / 2)
 		d['replacement_rate_db'] /= 100
-		d['rate_employee_db'] = st.slider("Contribution rate employee of current DB (in %)", min_value=0.00, max_value=100.00, step=0.5, key="rate_employee_db_"+which, value=10.00)
+		d['rate_employee_db'] = st.slider("Contribution rate employee of current DB (in %)", min_value=0.00, max_value=9.00, step=0.5,
+										  key="rate_employee_db_"+which, value=5.00)
 		d['rate_employee_db'] /= 100
 		d['income_previous_db'] = st.number_input("Amount of DB pension from previous employer", step=0.5, key="income_previous_db_"+which)
 
+	# dc pension
 	dc_pension = st.radio("Do you have a DC pension from current or previous employer", ["Yes", "No"], key="dc_pension_"+which, index=1)
 	if dc_pension == "Yes":
 		st.markdown("### DC Pension")
 		d['init_dc'] = st.number_input("Current amount", step=0.5, key="init_dc_"+which)
-		d['rate_employee_dc'] = st.slider("Contribution rate employee of current DC (in %)", min_value=0.00, max_value=100.00, step=0.5, key="rate_employee_dc_"+which, value=10.00)
+		d['rate_employee_dc'] = st.slider("Contribution rate employee of current DC (in %)", min_value=0.00, max_value=18.00, step=0.5,
+										  key="rate_employee_dc_"+which, value=5.00)
 		d['rate_employee_dc'] /= 100
-		d['rate_employer_dc'] = st.slider("Contribution rate  employer of current DC (in %)", min_value=0.00, max_value=100.00, step=0.5, key="rate_employer_dc_"+which, value=10.00)
+		d['rate_employer_dc'] = st.slider("Contribution rate  employer of current DC (in %)", min_value=0.00, max_value=18.00 - d['rate_employee-dc'],
+										  step=0.5, key="rate_employer_dc_"+which, value=5.00)
 		d['rate_employer_dc'] /= 100
 
 	if which == 'second':
