@@ -285,8 +285,6 @@ def mix_fee():
     d_mix_fee["fee"] /= 100.0
     return d_mix_fee
 
-## replace Ontario by Other (using the ON tax system)
-
 def info_hh():
     d_others = {}
     st.markdown("### Which province do you live in?")
