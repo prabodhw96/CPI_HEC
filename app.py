@@ -250,7 +250,7 @@ def info_spouse(which='first'):
 	with colby:
 		d['byear'] = st.number_input("Birth Year", min_value=1900, max_value=2020, key="byear_"+which, value=1960)
 	with colg:
-		d['sex'] = st.radio("Gender", ["male", "female"], key="sex_"+which, index=1)
+		d['sex'] = st.radio("Gender", ["Male", "Female"], key="sex_"+which, index=1)
 	colret, _, colcpp, _ = st.beta_columns([0.49, 0.01, 0.49, 0.01])
 	with colret:
 		d['ret_age'] = st.number_input("Retirement Age", min_value=2021-d['byear']+1, key="ret_age_"+which, value=65)
@@ -260,7 +260,7 @@ def info_spouse(which='first'):
 	with coled:
 		d['education'] = st.selectbox("Education", ["university", "post-secondary", "high school", "less than high school"], key="education_"+which)
 	with colwage:
-		d['init_wage'] = st.number_input("Current Wage", step=0.5, key="init_wage_"+which, value=30000.0)
+		d['init_wage'] = st.number_input("Annual Earnings for 2018", step=1, key="init_wage_"+which, value=50000)
 
 	colpr, colpv = st.beta_columns(2)
 	with colpr:
