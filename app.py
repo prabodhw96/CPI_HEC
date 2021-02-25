@@ -311,7 +311,6 @@ def info_hh(prod_dict):
     return d_others
 
 def fin_accounts(which):
-<<<<<<< HEAD
     d_fin = {}
     st.markdown("### Savings account")
 
@@ -469,124 +468,6 @@ def fin_accounts(which):
         st.stop()
     else:
         st.success("Total amount in financial products ({} $) = amount in financial account ({} $)".format(total_bal_unreg, d_fin["bal_unreg"]))
-=======
-	d_fin = {}
-	st.markdown("### Savings account")
-
-	st.markdown("### RRSP")
-	colrrsp1, colrrsp2 = st.beta_columns(2)
-	colrrsp3, colrrsp4 = st.beta_columns(2)
-	with colrrsp1:
-		d_fin["bal_rrsp"] = st.number_input("Amount in RRSP account", step=0.5, key="bal_rrsp_"+which)
-	with colrrsp2:
-		d_fin["cont_rate_rrsp"] = st.slider("Fraction of your earnings you plan to save in your RRSP account (in %)", min_value=0.0, max_value=100.0, step=0.5, value=10.0, key="cont_rate_rrsp_"+which)
-	with colrrsp3:
-		d_fin["withdrawal_rrsp"] = st.number_input("Amount of your RRSP account you plan to spend (in %)", key="withdrawal_rrsp_"+which)
-	with colrrsp4:
-		d_fin["init_room_rrsp"] = st.number_input("Current contribution room for RRSP", key="init_room_rrsp_"+which)
-
-	st.markdown("### TFSA")
-	coltfsa1, coltfsa2 = st.beta_columns(2)
-	coltfsa3, coltfsa4 = st.beta_columns(2)
-	with coltfsa1:
-		d_fin["bal_tfsa"] = st.number_input("Amount in TFSA account", step=0.5, key="bal_tfsa_"+which)
-	with coltfsa2:
-		d_fin["cont_rate_tfsa"] = st.slider("Fraction of your earnings you plan to save in your TFSA account (in %)", min_value=0.0, max_value=100.0, step=0.5, value=10.0, key="cont_rate_tfsa_"+which)
-	with coltfsa3:
-		d_fin["withdrawal_tfsa"] = st.number_input("Amount of your TFSA account you plan to spend (in %)", key="withdrawal_tfsa_"+which)
-	with coltfsa4:
-		d_fin["init_room_tfsa"] = st.number_input("Current contribution room for TFSA", key="init_room_tfsa_"+which)
-
-	st.markdown("### Other Reg")
-	coloreg1, coloreg2 = st.beta_columns(2)
-	coloreg3, coloreg4 = st.beta_columns(2)
-	with coloreg1:
-		d_fin["bal_other_reg"] = st.number_input("Amount in Other Reg account", step=0.5, key="bal_other_reg_"+which)
-	with coloreg2:
-		d_fin["cont_rate_other_reg"] = st.slider("Fraction of your earnings you plan to save in your Other Reg account (in %)", min_value=0.0, max_value=100.0, step=0.5, value=10.0, key="cont_rate_other_reg_"+which)
-	with coloreg3:
-		d_fin["withdrawal_other_reg"] = st.number_input("Amount of your Other Reg account you plan to spend (in %)", key="withdrawal_other_reg_"+which)
-
-	st.markdown("### Unreg")
-	colureg1, colureg2 = st.beta_columns(2)
-	colureg3, colureg4 = st.beta_columns(2)
-	with colureg1:
-		d_fin["bal_unreg"] = st.number_input("Amount in Unreg account", step=0.5, key="bal_unreg_"+which)
-	with colureg2:
-		d_fin["cont_rate_unreg"] = st.slider("Fraction of your earnings you plan to save in your Unreg account (in %)", min_value=0.0, max_value=100.0, step=0.5, value=10.0, key="cont_rate_unreg_"+which)
-	with colureg3:
-		d_fin["withdrawal_unreg"] = st.number_input("Amount of your Unreg account you plan to spend (in %)", key="withdrawal_unreg_"+which)
-
-	st.markdown("### Gains and Losses in Unregistered Account")
-	colf1, colf2 = st.beta_columns(2)
-	with colf1:
-		d_fin['cap_gains_unreg'] = st.number_input("Current capital gains on unregistered account", step=0.5, key="cap_gains_unreg_"+which)
-	with colf2:
-		d_fin['realized_losses_unreg'] = st.number_input("Current realized losses in capital on unregistered account", step=0.5, key="realized_losses_unreg_"+which)
-
-	return d_fin
-
-def info_spouse(which='first'):
-	d = {}
-	colby, colg = st.beta_columns(2)
-	with colby:
-		d['byear'] = st.number_input("Birth Year", min_value=1900, max_value=2020, key="byear_"+which, value=1960)
-	with colg:
-		d['sex'] = st.radio("Gender", ["Male", "Female"], key="sex_"+which, index=1)
-	colret, _, colcpp, _ = st.beta_columns([0.49, 0.01, 0.49, 0.01])
-	with colret:
-		d['ret_age'] = st.number_input("Retirement Age", min_value=2021-d['byear']+1, key="ret_age_"+which, value=65)
-	with colcpp:
-		d['claim_age_cpp'] = st.slider("Claim age cpp", key="claim_age_cpp_"+which, min_value=60, max_value=70, value=65)
-	coled, colwage = st.beta_columns(2)
-	with coled:
-		d['education'] = st.selectbox("Education", ["university", "post-secondary", "high school", "less than high school"], key="education_"+which)
-	with colwage:
-		d['init_wage'] = st.number_input("Annual Earnings for 2018", step=1, key="init_wage_"+which, value=50000)
-
-	colpr, colpv = st.beta_columns(2)
-	with colpr:
-		pension = st.radio("Do you currently receive a pension?", ["Yes", "No"], key="pension_radio_"+which, index=1)
-	if pension == "Yes":
-		with colpv:
-			d['pension'] = st.number_input("Yearly amount of pension", step=0.5, key="pension_"+which)
-
-	savings_plan = st.radio("Do you have any savings or plan to save in the future?", ["Yes", "No"], key="savings_plan_"+which, index=1)
-	if savings_plan == "Yes":
-		d.update(fin_accounts(which=which))
-
-	# db pension
-	db_pension = st.radio("Will you receive a DB pension from your current or previous employer", ["Yes", "No"], key="db_pension_"+which, index=1)
-	if db_pension == "Yes":
-		st.markdown("### DB Pension")
-		# lower and upper bound for pension
-		low_replacement_rate = min(0.02 * (d['ret_age'] - (2018 - d['byear'])), 0.70)
-    	high_replacement_rate = min(0.02 * (d['ret_age'] - 18), 0.70)
-    	return np.clip(row['replacement_rate_db'], low_b, high_b)
-		d['replacement_rate_db'] = st.slider("Replacement rate of current DB (in %)", min_value=low_replacement_rate, max_value=high_replacement_rate,
-											 step=0.5, key="replacement_rate_db_"+which, value=(low_replacement_rate - high_replacement_rate) / 2)
-		d['replacement_rate_db'] /= 100
-		d['rate_employee_db'] = st.slider("Contribution rate employee of current DB (in %)", min_value=0.00, max_value=9.00, step=0.5,
-										  key="rate_employee_db_"+which, value=5.00)
-		d['rate_employee_db'] /= 100
-		d['income_previous_db'] = st.number_input("Amount of DB pension from previous employer", step=0.5, key="income_previous_db_"+which)
-
-	# dc pension
-	dc_pension = st.radio("Do you have a DC pension from current or previous employer", ["Yes", "No"], key="dc_pension_"+which, index=1)
-	if dc_pension == "Yes":
-		st.markdown("### DC Pension")
-		d['init_dc'] = st.number_input("Current amount", step=0.5, key="init_dc_"+which)
-		d['rate_employee_dc'] = st.slider("Contribution rate employee of current DC (in %)", min_value=0.00, max_value=18.00, step=0.5,
-										  key="rate_employee_dc_"+which, value=5.00)
-		d['rate_employee_dc'] /= 100
-		d['rate_employer_dc'] = st.slider("Contribution rate  employer of current DC (in %)", min_value=0.00, max_value=18.00 - d['rate_employee-dc'],
-										  step=0.5, key="rate_employer_dc_"+which, value=5.00)
-		d['rate_employer_dc'] /= 100
-
-	if which == 'second':
-		d = {'s_' + k: v for k, v in d.items()}
-	return d
->>>>>>> 9de6a55909cd2091f05b370971f3ea5b3f5f5ef5
 
     st.markdown("### Gains and Losses in Unregistered Account")
     d_fin['cap_gains_unreg'] = st.number_input("Balance of unrealized capital gains as of December 31, 2020",
