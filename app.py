@@ -304,6 +304,7 @@ def info_hh(prod_dict):
         d_others['business'] = st.number_input("Value of the business in 2020", min_value=0.0, step=500.0, key="business_value")
         d_others['price_business'] = st.number_input("Buying price of the business", max_value=0.0, step=500.0, key="business_price")
 
+    st.markdown("### Debts other than mortgage")
     mortgage = st.radio("Do you have any debt other than mortgage?", ["Yes", "No"], key="mortgage", index=1)
     if mortgage == "Yes":
         d_others.update(debts())
