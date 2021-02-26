@@ -65,13 +65,26 @@ def info_spouse(which='first'):
     d['claim_age_cpp'] = min(d['ret_age'], 70)
     st.success("claim age cpp: {} ({})".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
     st.success("claim age OAS: 65")
-    d['education'] = st.selectbox("Education (highest degree obtained)", 
-        ["university", "post-secondary", "high school", "less than high school"], key="education_"+which)
-    d['init_wage'] = st.number_input("Annual Earnings for 2018", min_value=0, step=500, key="init_wage_"+which, value=50000)
+    d_education = {'Certificate of Apprenticeship or Certificate of Qualification': 'post-secondary',
+                   "Bachelor's degree": 'university',
+                   'Program of 1 to 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
+                   'Trades certificate or diploma other than Certificate of Apprenticeship or Certificate of Qualification)': 'post-secondary',
+                   'Secondary (high) school diploma or equivalency certificate': 'high school',
+                   'Program of more than 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
+                   "Master's degree": 'university',
+                   'Program of 3 months to less than 1 year (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
+                   'No certificate, diploma or degree': 'less than high school',
+                   'University certificate or diploma above bachelor level': 'university',
+                   'Degree in medicine, dentistry, veterinary medicine or optometry': 'university',
+                   'University certificate or diploma below bachelor level': 'university',
+                   'Earned doctorate': 'university'}
+    degree = st.radio("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
+    d['education'] = d_education[degree]
+    d['init_wage'] = st.number_input("Annual Earnings for 2020", min_value=0, step=500, key="init_wage_"+which, value=50000)
 
     pension = st.radio("Do you currently (in 2020) receive a pension?", ["Yes", "No"], key="pension_radio_"+which, index=1)
     if pension == "Yes":
-        d['pension'] = st.number_input("Yearly amount of pension",  min_value=0, step=500, key="pension_"+which, value=0)
+        d['pension'] = st.number_input("Yearly amount of pension",  min_value=0, step=500, key="pension_"+which, value=0)   
 
     savings_plan = st.radio("Do you have any savings or plan to save in the future?", ["Yes", "No"], key="savings_plan_"+which, index=1)
     if savings_plan == "Yes":
@@ -484,8 +497,11 @@ def prepare_RRI(df):
     results.merge()
     df_res = results.df_merged
     cons_floor = 0
-    if len(df_res[df_res["cons_bef"] < cons_floor]) + len(df_res[df_res["cons_after"] < cons_floor]) > 0:
-        st.error("Consumption is negative")
+    if len(df_res[df_res["cons_bef"] < cons_floor]):
+        st.error("Consumption before retirement is negative: savings or debt payments are too high")
+        st.stop()
+    if len(df_res[df_res["cons_after"] < cons_floor]):
+        st.error("Consumption after retirement is negative: debt payments are too high")
         st.stop()
     df_res['RRI'] = df_res.cons_after / df_res.cons_bef * 100
     return df_res
@@ -581,7 +597,8 @@ if st.button("Show visualizations", False):
 
         d_results = prepare_dict_results(df_res.fillna(0).to_dict('records')[0])
 
-        l_income = ['oas', 'gis', 'cpp', 'pension', 'RPP DC', 'RPP DB', 'annuity rrsp', 'annuity non-rrsp']
+        l_income = ['oas', 'gis', 'cpp', 'pension', 'RPP DC', 'RPP DB',
+                    'annuity rrsp', 'annuity non-rrsp']
 
         l_expenses = ['net tax liability', 'debt payments']
 
