@@ -3,6 +3,6 @@ pandas
 matplotlib
 seaborn
 numba
-streamlit==0.69
+streamlit==0.76
 cpr-rsi
 openpyxl
