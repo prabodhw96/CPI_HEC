@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 import pickle
+import math
 from CPR import main
 import streamlit as st
 
@@ -191,12 +192,13 @@ def mix_fee(prod_dict):
         d_investments["Cash value of permanent life policy"] = prod_dict["cvplp"]/total_sum
         d_investments["Individual segregated funds"] = prod_dict["isf"]/total_sum
         d_investments["ETFs"] = prod_dict["etf"]/total_sum
-
         d_mix_fee = {key: 0 for key in df.columns}
         df['fraction'] = pd.Series(d_investments)
         for key in d_mix_fee:
             d_mix_fee[key] = (df[key] * df.fraction).sum()
         d_mix_fee['fee_equity'] = (df.equity * df.fraction * df.fee).sum() / (df.equity * df.fraction).sum()
+        if math.isnan(d_mix_fee['fee_equity']):
+            d_mix_fee['fee_equity'] = 0
         d_mix_fee['fee_equity'] /= 100.0
         d_mix_fee["mix_bills"] = d_mix_fee.pop("bills")
         d_mix_fee["mix_bills"] /= 100.0
@@ -372,6 +374,7 @@ col_p1, _, col_p2 = st.beta_columns([0.55, 0.1, 0.35])
 
 with col_p1:
     d_hh = ask_hh()
+    #st.write(d_hh)
     df = create_dataframe(d_hh)
     df_res = prepare_RRI(df)
     fin_acc_cols = ['bal_rrsp', 'bal_tfsa', 'bal_other_reg', 'bal_unreg', 'cont_rate_rrsp', 'cont_rate_tfsa', 'cont_rate_other_reg',
