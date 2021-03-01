@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 import pickle
+import math
 from CPR import main
 import streamlit as st
 
@@ -56,7 +57,7 @@ def message_cpp(ret_age):
         message += ', but at least 60'
     return message
 
-def info_spouse(which='first'):
+def info_spouse(which='first', step_amount=100):
     d = {}
     d['byear'] = st.number_input("Birth Year", min_value=1900, max_value=2020, key="byear_"+which, value=1980)
     d_gender = {'female': 'Female', 'male': 'Male'}
@@ -65,6 +66,7 @@ def info_spouse(which='first'):
     d['claim_age_cpp'] = min(d['ret_age'], 70)
     st.success("claim age cpp: {} ({})".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
     st.success("claim age OAS: 65")
+
     d_education = {'Certificate of Apprenticeship or Certificate of Qualification': 'post-secondary',
                    "Bachelor's degree": 'university',
                    'Program of 1 to 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
@@ -80,20 +82,22 @@ def info_spouse(which='first'):
                    'Earned doctorate': 'university'}
     degree = st.radio("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
     d['education'] = d_education[degree]
-    d['init_wage'] = st.number_input("Annual Earnings for 2020", min_value=0, step=500, key="init_wage_"+which, value=50000)
+    d['init_wage'] = st.number_input("Annual Earnings for 2020", min_value=0, step=step_amount, key="init_wage_"+which, value=50000)
 
     pension = st.radio("Do you currently (in 2020) receive a pension?", ["Yes", "No"], key="pension_radio_"+which, index=1)
     if pension == "Yes":
-        d['pension'] = st.number_input("Yearly amount of pension",  min_value=0, step=500, key="pension_"+which, value=0)   
+        d['pension'] = st.number_input("Yearly amount of pension",  min_value=0, step=step_amount, key="pension_"+which, value=0)   
 
-    savings_plan = st.radio("Do you have any savings or plan to save in the future?", ["Yes", "No"], key="savings_plan_"+which, index=1)
+    savings_plan = st.radio("Do you have any savings or plan to save in the future?", ["Yes", "No"], 
+                            key="savings_plan_"+which, index=1)
     if savings_plan == "Yes":
         d.update(fin_accounts(which=which))
     else:
         d_fin_details =  {key: 0 for key in ['cap_gains_unreg', 'realized_losses_unreg', 'init_room_rrsp', 'init_room_tfsa']}
         d.update(d_fin_details)
 
-    db_pension = st.radio("Will you receive a DB pension from your current or previous employer", ["Yes", "No"], key="db_pension_"+which, index=1)
+    db_pension = st.radio("Will you receive a DB pension from your current or previous employer", ["Yes", "No"], 
+                            key="db_pension_"+which, index=1)
     if db_pension == "Yes":
         st.markdown("### DB Pension")
         d['replacement_rate_db'] = st.slider("Replacement rate of current DB (in %)",
@@ -105,14 +109,14 @@ def info_spouse(which='first'):
                                               key="rate_employee_db_"+which, value=5.00)
         d['rate_employee_db'] /= 100
         d['income_previous_db'] = st.number_input("Amount of DB pension from previous employer",
-                                                      min_value=0.0, step=500.0, key="income_previous_db_"+which)
+                                                      min_value=0, step=step_amount, key="income_previous_db_"+which)
 
     dc_pension = st.radio("Do you have a DC pension from current or previous employer",
                           ["Yes", "No"], key="dc_pension_"+which, index=1)
     if dc_pension == "Yes":
         st.markdown("### DC Pension")
         d['init_dc'] = st.number_input("Annual amount of current pension", min_value=0,
-                                           step=500, value=0, key="init_dc_" + which)
+                                           step=step_amount, value=0, key="init_dc_" + which)
         d['rate_employee_dc'] = st.slider("Contribution rate employee of current DC (in %)",
                                               min_value=0, max_value=30, step=1,
                                               key="rate_employee_dc_"+which, value=5)
@@ -147,36 +151,18 @@ def create_dataframe(d_hh):
 def change_info(d_hh, **kwargs):
     return d_hh.update(kwargs)
 
-def debts():
+def debts(step_amount=100):
     d_debts = {}
     dbt_dict = {'credit card debt':'credit_card', 'a personal loan':'personal_loan', 'a student loan':'student_loan',
                 'a car loan':'car_loan', 'a credit line':'credit_line', 'other debt':'other_debt'}
     l_debts = ['credit_card', 'personal_loan', 'student_loan', 'car_loan', 'credit_line', 'other_debt']
     l_names = ['credit card debt', 'a personal loan', 'a student loan', 'a car loan', 'a credit line', 'other debt']
 
-    st.markdown("### Credit card debt")
-    d_debts["credit_card"] = st.number_input("Balance", min_value=0.0, step=500.0, key="debt_credit_card")
-    d_debts["credit_card_payment"] = st.number_input("Monthly payment", min_value=0.0, step=100.0, key="debt_payment_credit_card", max_value=d_debts["credit_card"])
-
-    st.markdown("### Personal Loan")
-    d_debts["personal_loan"] = st.number_input("Balance", min_value=0.0, step=500.0, key="debt_personal_loan")
-    d_debts["personal_loan_payment"] = st.number_input("Monthly payment", min_value=0.0, step=100.0, key="debt_payment_personal_loan", max_value=d_debts["personal_loan"])
-
-    st.markdown("### Student Loan")
-    d_debts["student_loan"] = st.number_input("Balance", min_value=0.0, step=500.0, key="debt_student_loan")
-    d_debts["student_loan_payment"] = st.number_input("Monthly payment", min_value=0.0, step=100.0, key="debt_payment_student_loan", max_value=d_debts["student_loan"])
-
-    st.markdown("### Car Loan")
-    d_debts["car_loan"] = st.number_input("Balance", min_value=0.0, step=500.0, key="debt_car_loan")
-    d_debts["car_loan_payment"] = st.number_input("Monthly payment", min_value=0.0, step=100.0, key="debt_payment_car_loan", max_value=d_debts["car_loan"])
-
-    st.markdown("### Credit Line")
-    d_debts["credit_line"] = st.number_input("Balance", min_value=0.0, step=500.0, key="debt_credit_line")
-    d_debts["credit_line_payment"] = st.number_input("Monthly payment", min_value=0.0, step=100.0, key="debt_payment_credit_line", max_value=d_debts["credit_line"])
-
-    st.markdown("### Other debt")
-    d_debts["other_debt"] = st.number_input("Balance", min_value=0.0, step=500.0, key="debt_other_debt")
-    d_debts["other_debt_payment"] = st.number_input("Monthly payment", min_value=0.0, step=100.0, key="debt_payment_other_debt", max_value=d_debts["other_debt"])
+    for i in l_names:
+        st.markdown("### {}".format(i))
+        d_debts[dbt_dict[i]] = st.number_input("Balance", min_value=0, step=step_amount, key="debt_"+dbt_dict[i])
+        d_debts[dbt_dict[i]+"_payment"] = st.number_input("Monthly payment", min_value=0, step=step_amount, 
+                                                            key="debt_payment_"+dbt_dict[i], max_value=d_debts[dbt_dict[i]])
 
     for key in ["credit_card", "personal_loan", "student_loan", "car_loan", "credit_line", "other_debt"]:
         if d_debts[key] == 0:
@@ -185,79 +171,19 @@ def debts():
 
     return d_debts
 
-def info_residence(which):
+def info_residence(which, step_amount=100):
     d_res = {}
     res = "the "+which+" residence"
     res_value_str = "Value"
-    d_res[f'{which}_residence'] = st.number_input(res_value_str, min_value=0.0, step=500.0, key="res_value_"+which)
+    d_res[f'{which}_residence'] = st.number_input(res_value_str, min_value=0, step=step_amount, key="res_value_"+which)
     res_buy_str = "Buying price"
-    d_res[f'price_{which}_residence'] = st.number_input(res_buy_str, min_value=0.0, step=500.0, key="res_buy_"+which)
+    d_res[f'price_{which}_residence'] = st.number_input(res_buy_str, min_value=0, step=step_amount, key="res_buy_"+which)
     res_mortgage_str = "Outstanding mortgage"
-    d_res[f'{which}_mortgage'] = st.number_input(res_mortgage_str, min_value=0.0, step=500.0, key="res_mortgage_"+which)
+    d_res[f'{which}_mortgage'] = st.number_input(res_mortgage_str, min_value=0, step=step_amount, key="res_mortgage_"+which)
     res_mortgage_payment_str = "Monthly payment on mortgage"
-    d_res[f'{which}_mortgage_payment'] = st.number_input(res_mortgage_payment_str, min_value=0.0, step=500.0, key="res_mortgage_payment_"+which)
+    d_res[f'{which}_mortgage_payment'] = st.number_input(res_mortgage_payment_str, min_value=0, step=step_amount, 
+                                                        key="res_mortgage_payment_"+which)
     return d_res
-
-def mix_fee():
-    st.markdown("### Investments")
-    df = pd.read_csv('mix_fee_assets.csv', index_col=0, usecols=range(0, 5))
-    d_investments = {}
-    st.markdown("#### Checking or regular savings account")
-    d_investments["Checking or regular savings account"] = st.slider("Fraction of portfolio invested", min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="mix_fee_checking")
-    d_investments["Checking or regular savings account"] /= 100
-
-    st.markdown("#### High interest/premium savings account")
-    d_investments["High interest/premium savings account"] = st.slider("Fraction of portfolio invested", min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="mix_fee_premium")
-    d_investments["High interest/premium savings account"] /= 100
-
-    st.markdown("#### Mutual funds")
-    d_investments["Mutual funds"] = st.slider("Fraction of portfolio invested", min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="mix_fee_mf")
-    d_investments["Mutual funds"] /= 100
-
-    st.markdown("#### Stocks")
-    d_investments["Stocks"] = st.slider("Fraction of portfolio invested", min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="mix_fee_stocks")
-    d_investments["Stocks"] /= 100
-
-    st.markdown("#### Bonds")
-    d_investments["Bonds"] = st.slider("Fraction of portfolio invested", min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="mix_fee_bonds")
-    d_investments["Bonds"] /= 100
-
-    st.markdown("#### GICs")
-    d_investments["GICs"] = st.slider("Fraction of portfolio invested", min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="mix_fee_gic")
-    d_investments["GICs"] /= 100
-
-    st.markdown("#### Cash value of permanent life policy")
-    d_investments["Cash value of permanent life policy"] = st.slider("Fraction of portfolio invested", min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="mix_fee_policy")
-    d_investments["Cash value of permanent life policy"] /= 100
-
-    st.markdown("#### Individual segregated funds")
-    d_investments["Individual segregated funds"] = st.slider("Fraction of portfolio invested", min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="mix_fee_segregated")
-    d_investments["Individual segregated funds"] /= 100
-
-    st.markdown("#### ETFs")
-    d_investments["ETFs"] = st.slider("Fraction of portfolio invested", min_value=0.0, max_value=100.0, value=20.0, step=0.5, key="mix_fee_etf")
-    d_investments["ETFs"] /= 100
-
-    d_mix_fee = {key: 0 for key in df.columns}
-    df['fraction'] = pd.Series(d_investments)
-    if df['fraction'].sum() != 1:
-        st.error("Total sum = {}%; does not sum up to 100%".format(round(df['fraction'].sum()*100, 2)))
-        st.stop()
-    else:
-        st.success("Total sum = 100% !")
-
-    for key in d_mix_fee:
-        d_mix_fee[key] = (df[key] * df.fraction).sum()
-    d_mix_fee['fee_equity'] = (df.equity * df.fraction * df.fee).sum() / (df.equity * df.fraction).sum()
-    d_mix_fee['fee_equity'] /= 100.0
-    d_mix_fee["mix_bills"] = d_mix_fee.pop("bills")
-    d_mix_fee["mix_bills"] /= 100.0
-    d_mix_fee["mix_bonds"] = d_mix_fee.pop("bonds")
-    d_mix_fee["mix_bonds"] /= 100.0
-    d_mix_fee["mix_equity"] = d_mix_fee.pop("equity")
-    d_mix_fee["mix_equity"] /= 100.0
-    d_mix_fee["fee"] /= 100.0
-    return d_mix_fee
 
 def mix_fee(prod_dict):
     df = pd.read_csv('mix_fee_assets.csv', index_col=0, usecols=range(0, 5))
@@ -280,12 +206,13 @@ def mix_fee(prod_dict):
         d_investments["Cash value of permanent life policy"] = prod_dict["cvplp"]/total_sum
         d_investments["Individual segregated funds"] = prod_dict["isf"]/total_sum
         d_investments["ETFs"] = prod_dict["etf"]/total_sum
-
         d_mix_fee = {key: 0 for key in df.columns}
         df['fraction'] = pd.Series(d_investments)
         for key in d_mix_fee:
             d_mix_fee[key] = (df[key] * df.fraction).sum()
         d_mix_fee['fee_equity'] = (df.equity * df.fraction * df.fee).sum() / (df.equity * df.fraction).sum()
+        if math.isnan(d_mix_fee['fee_equity']):
+            d_mix_fee['fee_equity'] = 0
         d_mix_fee['fee_equity'] /= 100.0
         d_mix_fee["mix_bills"] = d_mix_fee.pop("bills")
         d_mix_fee["mix_bills"] /= 100.0
@@ -297,7 +224,7 @@ def mix_fee(prod_dict):
     return d_mix_fee
 
 
-def info_hh(prod_dict):
+def info_hh(prod_dict, step_amount=100):
     d_others = {}
     st.markdown("### Which province do you live in?")
     d_prov = {"qc": "QC", "on": "Other (using the ON tax system)"}
@@ -314,8 +241,9 @@ def info_hh(prod_dict):
     st.markdown("### Business")
     business = st.radio("Do you own a business?", ["Yes", "No"], key="business", index=1)
     if business == "Yes":
-        d_others['business'] = st.number_input("Value of the business in 2020", min_value=0.0, step=500.0, key="business_value")
-        d_others['price_business'] = st.number_input("Buying price of the business", max_value=0.0, step=500.0, key="business_price")
+        d_others['business'] = st.number_input("Value of the business in 2020", min_value=0, step=step_amount, key="business_value")
+        d_others['price_business'] = st.number_input("Buying price of the business", min_value=0, step=step_amount, 
+                                                    key="business_price")
 
     st.markdown("### Debts other than mortgage")
     mortgage = st.radio("Do you have any debt other than mortgage?", ["Yes", "No"], key="mortgage", index=1)
@@ -324,172 +252,62 @@ def info_hh(prod_dict):
 
     return d_others
 
-def fin_accounts(which):
+def fin_accounts(which, step_amount=100):
     d_fin = {}
     st.markdown("### Savings account")
+    accs = ["rrsp", "tfsa", "other_reg", "unreg"]
+    acc_cap = {"rrsp": "RRSP", "tfsa": "TFSA", "other_reg": "Other Reg", "unreg": "Unreg"}
+    for i in accs:
+        st.markdown("### {}".format(acc_cap[i]))
+        d_fin["bal_"+i] = st.number_input("Amount in {} account".format(acc_cap[i]), min_value=0, step=step_amount, 
+                                            key="bal_"+i+"_"+which)
+        d_fin["cont_rate_"+i] = st.number_input("Fraction of your earnings you plan to save in your {} account (in %)".format(
+                                                acc_cap[i]),
+                                                min_value=0.0, max_value=100.0, step=10.0, key="cont_rate_"+i+"_"+which)
+        d_fin["cont_rate_"+i] /= 100.0
+        d_fin["withdrawal_"+i] = st.number_input("Amount of your {} account you plan to spend (in $)".format(acc_cap[i]),
+                                                min_value=0, step=step_amount, key="withdrawal_"+i+"_"+which)
+        if i in ["rrsp", "tfsa"]:
+            d_fin["init_room_"+i] = st.number_input("Contribution room for {} in 2020".format(acc_cap[i]),
+                                                    min_value=0, step=step_amount, key="init_room_"+i+"_"+which)
 
-    st.markdown("### RRSP")
-    d_fin["bal_rrsp"] = st.number_input("Amount in RRSP account", min_value=0.0, step=500.0, key="bal_rrsp_"+which)
-    d_fin["cont_rate_rrsp"] = st.number_input("Fraction of your earnings you plan to save in your RRSP account (in %)",
-                                                min_value=0.0, max_value=100.0, step=1.0, key="cont_rate_rrsp_"+which)
-    d_fin["cont_rate_rrsp"] /= 100
-    d_fin["withdrawal_rrsp"] = st.number_input("Amount of your RRSP account you plan to spend (in $)",
-                                                   min_value=0.0, step=500.0, key="withdrawal_rrsp_"+which)
-    d_fin["init_room_rrsp"] = st.number_input("Contribution room for RRSP in 2020", 
-                                                  min_value=0.0, step=500.0, key="init_room_rrsp_"+which)
-    total_rrsp = 0
-    d_fin["rrsp_crsa"] = st.number_input("Amount in Checking or regular savings account", min_value=0.0, value=0.0,
-                                            step=500.0, key="rrsp_crsa_"+which)
-    total_rrsp += d_fin["rrsp_crsa"]
-    d_fin["rrsp_hipsa"] = st.number_input("Amount in High interest/premium savings account", min_value=0.0, value=0.0,
-                                            step=500.0, key="rrsp_hipsa_"+which)
-    total_rrsp += d_fin["rrsp_hipsa"]
-    d_fin["rrsp_mf"] = st.number_input("Amount in Mutual funds", min_value=0.0, value=0.0, step=500.0, key="rrsp_mf_"+which)
-    total_rrsp += d_fin["rrsp_mf"]
-    d_fin["rrsp_stocks"] = st.number_input("Amount in Stocks", min_value=0.0, value=0.0, step=500.0, key="rrsp_stocks_"+which)
-    total_rrsp += d_fin["rrsp_stocks"]
-    d_fin["rrsp_bonds"] = st.number_input("Amount in Bonds", min_value=0.0, value=0.0, step=500.0, key="rrsp_bonds_"+which)
-    total_rrsp += d_fin["rrsp_bonds"]
-    d_fin["rrsp_gic"] = st.number_input("Amount in GICs", min_value=0.0, value=0.0, step=500.0, key="rrsp_gic_"+which)
-    total_rrsp += d_fin["rrsp_gic"]
-    d_fin["rrsp_cvplp"] = st.number_input("Amount in Cash value of permanent life policy", min_value=0.0, 
-                                            value=0.0, step=500.0, key="rrsp_cvplp_"+which)
-    total_rrsp += d_fin["rrsp_cvplp"]
-    d_fin["rrsp_isf"] = st.number_input("Amount in Individual segregated funds", min_value=0.0, value=0.0, step=500.0,
-                                            key="rrsp_isf_"+which)
-    total_rrsp += d_fin["rrsp_isf"]
-    d_fin["rrsp_etf"] = st.number_input("Amount in ETFs", min_value=0.0, value=0.0, step=500.0, key="rrsp_etf_"+which)
-    total_rrsp += d_fin["rrsp_etf"]
-    if total_rrsp != d_fin["bal_rrsp"]:
-        st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(total_rrsp, d_fin["bal_rrsp"]))
-        st.stop()
-    else:
-        st.success("Total amount in financial products ({} $) = amount in financial account ({} $)".format(total_rrsp, d_fin["bal_rrsp"]))
-
-    st.markdown("### TFSA")
-    d_fin["bal_tfsa"] = st.number_input("Amount in TFSA account", min_value=0.0, step=500.0, key="bal_tfsa_"+which)
-    d_fin["cont_rate_tfsa"] = st.number_input("Fraction of your earnings you plan to save in your TFSA account (in %)", min_value=0.00, max_value=100.00, key="cont_rate_tfsa_"+which)
-    d_fin["cont_rate_tfsa"] /= 100.0
-    d_fin["withdrawal_tfsa"] = st.number_input("Amount of your TFSA account you plan to spend (in $)", min_value=0.0, step=500.0, key="withdrawal_tfsa_"+which)
-    d_fin["init_room_tfsa"] = st.number_input("Contribution room for TFSA in 2020",
-                                                  min_value=0.0, key="init_room_tfsa_"+which)
-    total_tfsa = 0
-    d_fin["tfsa_crsa"] = st.number_input("Amount in Checking or regular savings account", min_value=0.0, value=0.0,
-                                            step=500.0, key="tfsa_crsa_"+which)
-    total_tfsa += d_fin["tfsa_crsa"]
-    d_fin["tfsa_hipsa"] = st.number_input("Amount in High interest/premium savings account", min_value=0.0, value=0.0,
-                                            step=500.0, key="tfsa_hipsa_"+which)
-    total_tfsa += d_fin["tfsa_hipsa"]
-    d_fin["tfsa_mf"] = st.number_input("Amount in Mutual funds", min_value=0.0, value=0.0, step=500.0, key="tfsa_mf_"+which)
-    total_tfsa += d_fin["tfsa_mf"]
-    d_fin["tfsa_stocks"] = st.number_input("Amount in Stocks", min_value=0.0, value=0.0, step=500.0, key="tfsa_stocks_"+which)
-    total_tfsa += d_fin["tfsa_stocks"]
-    d_fin["tfsa_bonds"] = st.number_input("Amount in Bonds", min_value=0.0, value=0.0, step=500.0, key="tfsa_bonds_"+which)
-    total_tfsa += d_fin["tfsa_bonds"]
-    d_fin["tfsa_gic"] = st.number_input("Amount in GICs", min_value=0.0, value=0.0, step=500.0, key="tfsa_gic_"+which)
-    total_tfsa += d_fin["tfsa_gic"]
-    d_fin["tfsa_cvplp"] = st.number_input("Amount in Cash value of permanent life policy", min_value=0.0, 
-                                            value=0.0, step=500.0, key="tfsa_cvplp_"+which)
-    total_tfsa += d_fin["tfsa_cvplp"]
-    d_fin["tfsa_isf"] = st.number_input("Amount in Individual segregated funds", min_value=0.0, value=0.0, step=500.0,
-                                            key="tfsa_isf_"+which)
-    total_tfsa += d_fin["tfsa_isf"]
-    d_fin["tfsa_etf"] = st.number_input("Amount in ETFs", min_value=0.0, value=0.0, step=500.0, key="tfsa_etf_"+which)
-    total_tfsa += d_fin["tfsa_etf"]
-    if total_tfsa != d_fin["bal_tfsa"]:
-        st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(total_tfsa, d_fin["bal_tfsa"]))
-        st.stop()
-    else:
-        st.success("Total amount in financial products ({} $) = amount in financial account ({} $)".format(total_tfsa, d_fin["bal_tfsa"]))
-
-    st.markdown("### Other Reg")
-    d_fin["bal_other_reg"] = st.number_input("Amount in Other Reg account", min_value=0.0, step=500.0, key="bal_other_reg_"+which)
-    d_fin["cont_rate_other_reg"] = st.number_input("Fraction of your earnings you plan to save in your Other Reg account (in %)", min_value=0.00, max_value=100.00, key="cont_rate_other_reg_"+which)
-    d_fin["cont_rate_other_reg"] /= 100.0
-    d_fin["withdrawal_other_reg"] = st.number_input("Amount of your Other Reg account you plan to spend (in $)",
-                                                        min_value=0.0, step=500.0, key="withdrawal_other_reg_"+which)
-    total_bal_other_reg = 0
-    d_fin["bal_other_reg_crsa"] = st.number_input("Amount in Checking or regular savings account", min_value=0.0, value=0.0,
-                                            step=500.0, key="bal_other_reg_crsa_"+which)
-    total_bal_other_reg += d_fin["bal_other_reg_crsa"]
-    d_fin["bal_other_reg_hipsa"] = st.number_input("Amount in High interest/premium savings account", min_value=0.0, value=0.0,
-                                            step=500.0, key="bal_other_reg_hipsa_"+which)
-    total_bal_other_reg += d_fin["bal_other_reg_hipsa"]
-    d_fin["bal_other_reg_mf"] = st.number_input("Amount in Mutual funds", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_other_reg_mf_"+which)
-    total_bal_other_reg += d_fin["bal_other_reg_mf"]
-    d_fin["bal_other_reg_stocks"] = st.number_input("Amount in Stocks", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_other_reg_stocks_"+which)
-    total_bal_other_reg += d_fin["bal_other_reg_stocks"]
-    d_fin["bal_other_reg_bonds"] = st.number_input("Amount in Bonds", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_other_reg_bonds_"+which)
-    total_bal_other_reg += d_fin["bal_other_reg_bonds"]
-    d_fin["bal_other_reg_gic"] = st.number_input("Amount in GICs", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_other_reg_gic_"+which)
-    total_bal_other_reg += d_fin["bal_other_reg_gic"]
-    d_fin["bal_other_reg_cvplp"] = st.number_input("Amount in Cash value of permanent life policy", min_value=0.0, 
-                                            value=0.0, step=500.0, key="bal_other_reg_cvplp_"+which)
-    total_bal_other_reg += d_fin["bal_other_reg_cvplp"]
-    d_fin["bal_other_reg_isf"] = st.number_input("Amount in Individual segregated funds", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_other_reg_isf_"+which)
-    total_bal_other_reg += d_fin["bal_other_reg_isf"]
-    d_fin["bal_other_reg_etf"] = st.number_input("Amount in ETFs", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_other_reg_etf_"+which)
-    total_bal_other_reg += d_fin["bal_other_reg_etf"]
-    if total_bal_other_reg != d_fin["bal_other_reg"]:
-        st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(total_bal_other_reg, d_fin["bal_other_reg"]))
-        st.stop()
-    else:
-        st.success("Total amount in financial products ({} $) = amount in financial account ({} $)".format(total_bal_other_reg, d_fin["bal_other_reg"]))
-
-    st.markdown("### Unreg")
-    d_fin["bal_unreg"] = st.number_input("Amount in Unreg account", min_value=0.0, step=500.0, key="bal_unreg_"+which)
-    d_fin["cont_rate_unreg"] = st.number_input("Fraction of your earnings you plan to save in your Unreg account (in %)",
-        min_value=0.00, max_value=100.00, key="cont_rate_unreg_"+which)
-    d_fin["cont_rate_unreg"] /= 100.0
-    d_fin["withdrawal_unreg"] = st.number_input("Amount of your Unreg account you plan to spend (in $)",
-                                                    min_value=0.0, step=500.0, key="withdrawal_unreg_"+which)
-    total_bal_unreg = 0
-    d_fin["bal_unreg_crsa"] = st.number_input("Amount in Checking or regular savings account", min_value=0.0, value=0.0,
-                                            step=500.0, key="bal_unreg_crsa_"+which)
-    total_bal_unreg += d_fin["bal_unreg_crsa"]
-    d_fin["bal_unreg_hipsa"] = st.number_input("Amount in High interest/premium savings account", min_value=0.0, value=0.0,
-                                            step=500.0, key="bal_unreg_hipsa_"+which)
-    total_bal_unreg += d_fin["bal_unreg_hipsa"]
-    d_fin["bal_unreg_mf"] = st.number_input("Amount in Mutual funds", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_unreg_mf_"+which)
-    total_bal_unreg += d_fin["bal_unreg_mf"]
-    d_fin["bal_unreg_stocks"] = st.number_input("Amount in Stocks", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_unreg_stocks_"+which)
-    total_bal_unreg += d_fin["bal_unreg_stocks"]
-    d_fin["bal_unreg_bonds"] = st.number_input("Amount in Bonds", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_unreg_bonds_"+which)
-    total_bal_unreg += d_fin["bal_unreg_bonds"]
-    d_fin["bal_unreg_gic"] = st.number_input("Amount in GICs", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_unreg_gic_"+which)
-    total_bal_unreg += d_fin["bal_unreg_gic"]
-    d_fin["bal_unreg_cvplp"] = st.number_input("Amount in Cash value of permanent life policy", min_value=0.0, 
-                                            value=0.0, step=500.0, key="bal_unreg_cvplp_"+which)
-    total_bal_unreg += d_fin["bal_unreg_cvplp"]
-    d_fin["bal_unreg_isf"] = st.number_input("Amount in Individual segregated funds", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_unreg_isf_"+which)
-    total_bal_unreg += d_fin["bal_unreg_isf"]
-    d_fin["bal_unreg_etf"] = st.number_input("Amount in ETFs", min_value=0.0, value=0.0, step=500.0,
-                                            key="bal_unreg_etf_"+which)
-    total_bal_unreg += d_fin["bal_unreg_etf"]
-    if total_bal_unreg != d_fin["bal_unreg"]:
-        st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(total_bal_unreg, d_fin["bal_unreg"]))
-        st.stop()
-    else:
-        st.success("Total amount in financial products ({} $) = amount in financial account ({} $)".format(total_bal_unreg, d_fin["bal_unreg"]))
+        if d_fin["bal_"+i] > 0:
+            d_fin.update(financial_products(i, d_fin["bal_"+i], which, step_amount=step_amount))
 
     st.markdown("### Gains and Losses in Unregistered Account")
     d_fin['cap_gains_unreg'] = st.number_input("Balance of unrealized capital gains as of December 31, 2020",
-            min_value=0.0, step=500.0, key="cap_gains_unreg_"+which)
+            min_value=0, step=step_amount, key="cap_gains_unreg_"+which)
     d_fin['realized_losses_unreg'] = st.number_input("Realized losses in capital on unregistered account as of December 31, 2020",
-            min_value=0.0, step=500.0, key="realized_losses_unreg_"+which)
-
+            min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
     return d_fin
+
+def financial_products(account, balance, which, step_amount=100):
+    d_fp = {}
+    total_fp = 0
+    acc_cap = {"rrsp": "RRSP", "tfsa": "TFSA", "other_reg": "Other Reg", "unreg": "Unreg"}
+    st.markdown("### {} - Financial Products".format(acc_cap[account]))
+    fin_prods = ["crsa", "hipsa", "mf", "stocks", "bonds", "gic", "cvplp", "isf", "etf"]
+    fin_prods_dict = {"crsa": "Amount in Checking or regular savings account",
+                  "hipsa": "Amount in High interest/premium savings account",
+                  "mf": "Amount in Mutual funds",
+                  "stocks": "Amount in Stocks",
+                  "bonds": "Amount in Bonds",
+                  "gic": "Amount in GICs",
+                  "cvplp": "Amount in Checking or regular savings account",
+                  "isf": "Amount in Individual segregated funds",
+                  "etf": "Amount in ETFs"}
+    for i in fin_prods:
+        d_fp[account+"_"+i] = st.number_input(fin_prods_dict[i], min_value=0, step=step_amount, key=account+"_"+i+"_"+which)
+        total_fp += d_fp[account+"_"+i]
+
+    if total_fp != balance:
+        st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(
+                total_fp, balance))
+        st.stop()
+    else:
+        st.success("Total amount in financial products ({} $) = amount in financial account ({} $)".format(
+                    total_fp, balance))
+    return d_fp
 
 def prepare_RRI(df):
     results = main.run_simulations(df, nsim=20, n_jobs=1, non_stochastic=False,
@@ -569,10 +387,11 @@ st.markdown(f"""<style>
 
 st.markdown("<h1 style='text-align: center;'>CPR Simulator</h1>", unsafe_allow_html=True)
 
-col_p1, _, col_p2 = st.beta_columns([0.5, 0.1, 0.4])
+col_p1, _, col_p2 = st.beta_columns([0.55, 0.1, 0.35])
 
 with col_p1:
     d_hh = ask_hh()
+    #st.write(d_hh)
     df = create_dataframe(d_hh)
     df_res = prepare_RRI(df)
     fin_acc_cols = ['bal_rrsp', 'bal_tfsa', 'bal_other_reg', 'bal_unreg', 'cont_rate_rrsp', 'cont_rate_tfsa', 'cont_rate_other_reg',
@@ -589,6 +408,9 @@ with col_p1:
                 df[i].fillna(0, inplace=True)
             if ~df["s_"+i].notnull()[0] == 1:
                 df["s_"+i].fillna(0, inplace=True)
+
+    #if st.checkbox("Show raw data", False):
+    #    st.write(d_hh)
 
 if st.button("Show visualizations", False):
     df_res = prepare_RRI(df)
