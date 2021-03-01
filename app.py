@@ -80,7 +80,7 @@ def info_spouse(which='first', step_amount=100):
                    'Degree in medicine, dentistry, veterinary medicine or optometry': 'university',
                    'University certificate or diploma below bachelor level': 'university',
                    'Earned doctorate': 'university'}
-    degree = st.radio("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
+    degree = st.selectbox("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
     d['education'] = d_education[degree]
     d['init_wage'] = st.number_input("Annual Earnings for 2020", min_value=0, step=step_amount, key="init_wage_"+which, value=50000)
 
