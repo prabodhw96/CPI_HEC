@@ -259,26 +259,31 @@ def fin_accounts(which, step_amount=100):
     acc_cap = {"rrsp": "RRSP", "tfsa": "TFSA", "other_reg": "Other Reg", "unreg": "Unreg"}
     for i in accs:
         st.markdown("### {}".format(acc_cap[i]))
-        d_fin["bal_"+i] = st.number_input("Amount in {} account".format(acc_cap[i]), min_value=0, step=step_amount, 
-                                            key="bal_"+i+"_"+which)
-        d_fin["cont_rate_"+i] = st.number_input("Fraction of your earnings you plan to save in your {} account (in %)".format(
-                                                acc_cap[i]),
-                                                min_value=0.0, max_value=100.0, step=10.0, key="cont_rate_"+i+"_"+which)
+        d_fin["bal_"+i] = st.number_input(
+            "Amount in {} account".format(acc_cap[i]), value=0, min_value=0, step=step_amount,
+            key="bal_"+i+"_"+which)
+        d_fin["cont_rate_"+i] = st.number_input(
+            "Fraction of your earnings you plan to save in your {} account (in %)".format(
+                acc_cap[i]), value=0, min_value=0, max_value=100, step=1, key="cont_rate_"+i+"_"+which)
         d_fin["cont_rate_"+i] /= 100.0
-        d_fin["withdrawal_"+i] = st.number_input("Amount of your {} account you plan to spend (in $)".format(acc_cap[i]),
-                                                min_value=0, step=step_amount, key="withdrawal_"+i+"_"+which)
+        d_fin["withdrawal_"+i] = st.number_input(
+            "Amount of your {} account you plan to spend (in $)".format(acc_cap[i]),
+            value=0, min_value=0, step=step_amount, key="withdrawal_"+i+"_"+which)
         if i in ["rrsp", "tfsa"]:
-            d_fin["init_room_"+i] = st.number_input("Contribution room for {} in 2020".format(acc_cap[i]),
-                                                    min_value=0, step=step_amount, key="init_room_"+i+"_"+which)
+            d_fin["init_room_"+i] = st.number_input(
+                "Contribution room for {} in 2020".format(acc_cap[i]),
+                value=0, min_value=0, step=step_amount, key="init_room_"+i+"_"+which)
 
         if d_fin["bal_"+i] > 0:
             d_fin.update(financial_products(i, d_fin["bal_"+i], which, step_amount=step_amount))
 
     st.markdown("### Gains and Losses in Unregistered Account")
-    d_fin['cap_gains_unreg'] = st.number_input("Balance of unrealized capital gains as of December 31, 2020",
-            min_value=0, step=step_amount, key="cap_gains_unreg_"+which)
-    d_fin['realized_losses_unreg'] = st.number_input("Realized losses in capital on unregistered account as of December 31, 2020",
-            min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
+    d_fin['cap_gains_unreg'] = st.number_input(
+        "Balance of unrealized capital gains as of December 31, 2020",
+        value=0, min_value=0, step=step_amount, key="cap_gains_unreg_"+which)
+    d_fin['realized_losses_unreg'] = st.number_input(
+        "Realized losses in capital on unregistered account as of December 31, 2020",
+        value=0, min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
     return d_fin
 
 def financial_products(account, balance, which, step_amount=100):
@@ -288,16 +293,17 @@ def financial_products(account, balance, which, step_amount=100):
     st.markdown("### {} - Financial Products".format(acc_cap[account]))
     fin_prods = ["crsa", "hipsa", "mf", "stocks", "bonds", "gic", "cvplp", "isf", "etf"]
     fin_prods_dict = {"crsa": "Amount in Checking or regular savings account",
-                  "hipsa": "Amount in High interest/premium savings account",
-                  "mf": "Amount in Mutual funds",
-                  "stocks": "Amount in Stocks",
-                  "bonds": "Amount in Bonds",
-                  "gic": "Amount in GICs",
-                  "cvplp": "Amount in Checking or regular savings account",
-                  "isf": "Amount in Individual segregated funds",
-                  "etf": "Amount in ETFs"}
+                      "hipsa": "Amount in High interest/premium savings account",
+                      "mf": "Amount in Mutual funds",
+                      "stocks": "Amount in Stocks",
+                      "bonds": "Amount in Bonds",
+                      "gic": "Amount in GICs",
+                      "cvplp": "Amount in Checking or regular savings account",
+                      "isf": "Amount in Individual segregated funds",
+                      "etf": "Amount in ETFs"}
     for i in fin_prods:
-        d_fp[account+"_"+i] = st.number_input(fin_prods_dict[i], min_value=0, step=step_amount, key=account+"_"+i+"_"+which)
+        d_fp[account+"_"+i] = st.number_input(fin_prods_dict[i], value=0, min_value=0,
+                                              step=step_amount, key=account+"_"+i+"_"+which)
         total_fp += d_fp[account+"_"+i]
 
     if total_fp != balance:
