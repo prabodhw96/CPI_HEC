@@ -64,9 +64,7 @@ def info_spouse(which='first', step_amount=100):
     d['sex'] = st.radio("Gender", options=list(d_gender.keys()), format_func=lambda x: d_gender[x], key="sex_"+which, index=1)
     d['ret_age'] = st.number_input("Retirement Age", min_value=2021-d['byear']+1, key="ret_age_"+which, value=65)
     d['claim_age_cpp'] = min(d['ret_age'], 70)
-    st.success("claim age cpp: {} ({})".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
-    st.success("claim age OAS: 65")
-
+    st.success("claim age cpp: {} ({})&nbsp;&nbsp;&nbsp;&nbsp; claim age OAS: 65".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
     d_education = {'Certificate of Apprenticeship or Certificate of Qualification': 'post-secondary',
                    "Bachelor's degree": 'university',
                    'Program of 1 to 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
@@ -101,12 +99,12 @@ def info_spouse(which='first', step_amount=100):
     if db_pension == "Yes":
         st.markdown("### DB Pension")
         d['replacement_rate_db'] = st.slider("Replacement rate of current DB (in %)",
-                                                 min_value=0, max_value=70, step=1,
-                                                 key="replacement_rate_db_" + which, value=0)
+                                                 min_value=0.0, max_value=70.0, step=0.5,
+                                                 key="replacement_rate_db_" + which, value=0.0)
         d['replacement_rate_db'] /= 100
         d['rate_employee_db'] = st.slider("Contribution rate employee of current DB (in %)",
-                                              min_value=0.00, max_value=9.00, step=0.5,
-                                              key="rate_employee_db_"+which, value=5.00)
+                                              min_value=0.0, max_value=9.0, step=0.5,
+                                              key="rate_employee_db_"+which, value=5.0)
         d['rate_employee_db'] /= 100
         d['income_previous_db'] = st.number_input("Amount of DB pension from previous employer",
                                                       min_value=0, step=step_amount, key="income_previous_db_"+which)
@@ -118,12 +116,12 @@ def info_spouse(which='first', step_amount=100):
         d['init_dc'] = st.number_input("Annual amount of current pension", min_value=0,
                                            step=step_amount, value=0, key="init_dc_" + which)
         d['rate_employee_dc'] = st.slider("Contribution rate employee of current DC (in %)",
-                                              min_value=0, max_value=30, step=1,
-                                              key="rate_employee_dc_"+which, value=5)
+                                              min_value=0.0, max_value=30.0, step=0.5,
+                                              key="rate_employee_dc_"+which, value=5.0)
         d['rate_employee_dc'] /= 100
         d['rate_employer_dc'] = st.slider("Contribution rate  employer of current DC (in %)",
-                                              min_value=0, max_value=30, step=1,
-                                              key="rate_employer_dc_"+which, value=5)
+                                              min_value=0.0, max_value=30.0, step=0.5,
+                                              key="rate_employer_dc_"+which, value=5.0)
         d['rate_employer_dc'] /= 100
         if d['rate_employee_dc'] + d['rate_employer_dc'] > 0.18:
             st.warning("**Warning:** Tax legislation caps the combined employee-employer contribution rate at 18% of earnings")
@@ -158,13 +156,18 @@ def debts(step_amount=100):
     l_debts = ['credit_card', 'personal_loan', 'student_loan', 'car_loan', 'credit_line', 'other_debt']
     l_names = ['credit card debt', 'a personal loan', 'a student loan', 'a car loan', 'a credit line', 'other debt']
 
+    debt_names = list(dbt_dict.keys()) #addition
+    debt_list = st.multiselect(label="Select your debts", options=debt_names, key="debt_names") #addition
+    l_names = debt_list #addition
+
     for i in l_names:
         st.markdown("### {}".format(i))
         d_debts[dbt_dict[i]] = st.number_input("Balance", min_value=0, step=step_amount, key="debt_"+dbt_dict[i])
         d_debts[dbt_dict[i]+"_payment"] = st.number_input("Monthly payment", min_value=0, step=step_amount, 
                                                             key="debt_payment_"+dbt_dict[i], max_value=d_debts[dbt_dict[i]])
 
-    for key in ["credit_card", "personal_loan", "student_loan", "car_loan", "credit_line", "other_debt"]:
+    #for key in ["credit_card", "personal_loan", "student_loan", "car_loan", "credit_line", "other_debt"]:
+    for key in [dbt_dict[i] for i in l_names]: #addition
         if d_debts[key] == 0:
             d_debts.pop(key, None)
             d_debts.pop(key+"_payment", None)
@@ -210,7 +213,10 @@ def mix_fee(prod_dict):
         df['fraction'] = pd.Series(d_investments)
         for key in d_mix_fee:
             d_mix_fee[key] = (df[key] * df.fraction).sum()
-        d_mix_fee['fee_equity'] = (df.equity * df.fraction * df.fee).sum() / (df.equity * df.fraction).sum()
+        if (df.equity * df.fraction).sum() == 0:
+            d_mix_fee['fee_equity'] = 0
+        else:
+            d_mix_fee['fee_equity'] = (df.equity * df.fraction * df.fee).sum() / (df.equity * df.fraction).sum()
         if math.isnan(d_mix_fee['fee_equity']):
             d_mix_fee['fee_equity'] = 0
         d_mix_fee['fee_equity'] /= 100.0
@@ -255,8 +261,13 @@ def info_hh(prod_dict, step_amount=100):
 def fin_accounts(which, step_amount=100):
     d_fin = {}
     st.markdown("### Savings account")
-    accs = ["rrsp", "tfsa", "other_reg", "unreg"]
+    saving_plan_select = st.multiselect(label="Select your savings accounts", 
+                                            options=["RRSP", "TFSA", "Other Reg", "Unreg"], key="fin_acc_"+which) #addition
+    accs = saving_plan_select #addition
+    #accs = ["rrsp", "tfsa", "other_reg", "unreg"]
     acc_cap = {"rrsp": "RRSP", "tfsa": "TFSA", "other_reg": "Other Reg", "unreg": "Unreg"}
+    acc_cap_rev = {v: k for k, v in acc_cap.items()} #addition
+    accs = [acc_cap_rev[i] for i in accs] #addition
     for i in accs:
         st.markdown("### {}".format(acc_cap[i]))
         d_fin["bal_"+i] = st.number_input(
@@ -264,7 +275,7 @@ def fin_accounts(which, step_amount=100):
             key="bal_"+i+"_"+which)
         d_fin["cont_rate_"+i] = st.number_input(
             "Fraction of your earnings you plan to save in your {} account (in %)".format(
-                acc_cap[i]), value=0, min_value=0, max_value=100, step=1, key="cont_rate_"+i+"_"+which)
+                acc_cap[i]), value=0.0, min_value=0.0, max_value=100.0, step=0.5, key="cont_rate_"+i+"_"+which)
         d_fin["cont_rate_"+i] /= 100.0
         d_fin["withdrawal_"+i] = st.number_input(
             "Amount of your {} account you plan to spend (in $)".format(acc_cap[i]),
@@ -301,6 +312,11 @@ def financial_products(account, balance, which, step_amount=100):
                       "cvplp": "Amount in Checking or regular savings account",
                       "isf": "Amount in Individual segregated funds",
                       "etf": "Amount in ETFs"}
+    fin_prods_rev = {v: k for k, v in fin_prods_dict.items()} #addition
+    fin_prod_list = list(fin_prods_rev.keys()) #addition
+    fin_prod_select = st.multiselect(label="Select financial products", 
+                                    options=fin_prod_list, key="fin_prod_list_"+account+"_"+which) #addition
+    fin_prods = [fin_prods_rev[i] for i in fin_prod_select] #addition
     for i in fin_prods:
         d_fp[account+"_"+i] = st.number_input(fin_prods_dict[i], value=0, min_value=0,
                                               step=step_amount, key=account+"_"+i+"_"+which)
@@ -391,14 +407,16 @@ st.markdown(f"""<style>
     padding-top: 0em;
     }}</style>""", unsafe_allow_html=True)
 
+st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
+
 st.markdown("<h1 style='text-align: center;'>CPR Simulator</h1>", unsafe_allow_html=True)
 
 col_p1, _, col_p2 = st.beta_columns([0.55, 0.1, 0.35])
 
 with col_p1:
     d_hh = ask_hh()
-    #st.write(d_hh)
     df = create_dataframe(d_hh)
+    df = df.fillna(0)
     df_res = prepare_RRI(df)
     fin_acc_cols = ['bal_rrsp', 'bal_tfsa', 'bal_other_reg', 'bal_unreg', 'cont_rate_rrsp', 'cont_rate_tfsa', 'cont_rate_other_reg',
                 'cont_rate_unreg', 'withdrawal_rrsp', 'withdrawal_tfsa', 'withdrawal_other_reg', 'withdrawal_unreg',
@@ -414,9 +432,6 @@ with col_p1:
                 df[i].fillna(0, inplace=True)
             if ~df["s_"+i].notnull()[0] == 1:
                 df["s_"+i].fillna(0, inplace=True)
-
-    #if st.checkbox("Show raw data", False):
-    #    st.write(d_hh)
 
 if st.button("Show visualizations", False):
     df_res = prepare_RRI(df)
