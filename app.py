@@ -1,8 +1,5 @@
 import numpy as np
 import pandas as pd
-import tkinter
-import matplotlib
-matplotlib.use('PS')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
@@ -10,6 +7,7 @@ import pickle
 import math
 from CPR import main
 import streamlit as st
+import plotly.graph_objects as go
 
 def ask_hh():
     st.markdown("# Respondent")
@@ -401,6 +399,14 @@ def prepare_dict_results(d_hh):
         extract_to_dict(var, name, d_hh, d_results)
     return d_results
 
+def create_data_changes(df):
+    df_change = pd.DataFrame(np.repeat(df.values, 5, axis=0), columns=df.columns)
+    df_change.cont_rate_rrsp += np.array([0, 0.05, 0.10, 0, 0])
+    df_change.ret_age += np.array([0, 0, 0, -2, 2])
+    if any(df_change.couple) is True:
+        df_change.s_ret_age += np.array([0, 0, 0, -2, 2])
+    return df_change
+
 st.markdown(f"""<style>
     .reportview-container .main .block-container{{
     max-width: 1280px;
@@ -411,7 +417,7 @@ st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', uns
 
 st.markdown("<h1 style='text-align: center;'>CPR Simulator</h1>", unsafe_allow_html=True)
 
-col_p1, _, col_p2 = st.beta_columns([0.55, 0.1, 0.35])
+col_p1, _, col_p2 = st.beta_columns([0.55, 0.025, 0.425])
 
 with col_p1:
     d_hh = ask_hh()
@@ -436,80 +442,93 @@ with col_p1:
 if st.button("Show visualizations", False):
     df_res = prepare_RRI(df)
     with col_p2:
-        st.pyplot(plot_RRI(df_res, RRI_cutoff=80))
+        # Effect on uncertainty
+        nsim = 50
+        results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False, base_year=2020)
+        df_output = results.output
+        fig = go.Figure()
+        fig.add_scatter(x=df_output.cons_bef, y=df_output.cons_after, mode='markers', showlegend=False)
+        cons_bef = np.array([df_output.cons_bef.min(), df_output.cons_bef.max()])
+        fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef, mode='lines', name="RRI = 65", 
+                        line=dict(color="RoyalBlue", width=2, dash='dot')))
+        fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef, mode='lines', name="RRI = 80", 
+                        line=dict(color="Green", width=2, dash='dot')))
+        fig.update_layout(height=475, width=625,
+                          title={'text': f"<b>Consumptions ({nsim} realizations)</b>",
+                          'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
+                          xaxis_title="before retirement",
+                          yaxis_title="after retirement",
+                          font=dict(family="Courier New, monospace", size=14, color="RebeccaPurple"),
+                          legend={'traceorder':'reversed'})
+        st.plotly_chart(fig)
 
-        d_results = prepare_dict_results(df_res.fillna(0).to_dict('records')[0])
+        # Change contribution rate rrsp and retirement age
+        df_change = create_data_changes(df)
+        results = main.run_simulations(df_change, nsim=1, n_jobs=1, non_stochastic=True, base_year=2020)
+        results.merge()
+        df_change = results.df_merged
+        names = ['initial case', 'contrib rrsp + 5%', 'contrib rrsp + 10%', 'ret age -2', 'ret age +2']
+        init_cons_bef, init_cons_after = df_change.loc[0, ['cons_bef', 'cons_after']].values.squeeze().tolist()
+        fig = go.Figure()
+        l_cons_bef = []
+        for index, row in df_change.iterrows():
+            l_cons_bef.append(row['cons_bef'])
+            fig.add_scatter(x=[row['cons_bef']], y=[row['cons_after']], mode='markers', 
+                            marker=dict(size=10, line=dict(color='MediumPurple', width=2)), name=names[index])
+            fig.add_annotation(x=row['cons_bef'],  # arrows' head
+                               y=row['cons_after'],  # arrows' head
+                               ax=init_cons_bef,  # arrows' tail
+                               ay=init_cons_after,  # arrows' tail
+                               xref='x', yref='y', axref='x', ayref='y',
+                               text='',  # if you want only the arrow
+                               showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='black', opacity=0.5)
+        cons_bef = np.array([min(l_cons_bef), max(l_cons_bef)])
+        fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef, mode='lines', name="RRI = 65", 
+                                line=dict(color="RoyalBlue", width=1, dash='dot')))
+        fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef, mode='lines', name="RRI = 80", 
+                                line=dict(color="Green", width=1, dash='dot')))
+        fig.update_layout(height=475, width=625,
+                        title={'text': f"<b>Consumptions</b>", 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
+                        xaxis_title="before retirement", yaxis_title="after retirement",
+                        font=dict(family="Courier New, monospace", size=14, color="RebeccaPurple"))
+        st.plotly_chart(fig)
 
-        l_income = ['oas', 'gis', 'cpp', 'pension', 'RPP DC', 'RPP DB',
-                    'annuity rrsp', 'annuity non-rrsp']
+        # Income decomposition
+        # prepare data
+        hhold = df_change.loc[0, :]
+        pension = hhold['pension_after']
+        annuity = hhold['annuity_rrsp_after'] + hhold['annuity_rpp_dc_after'] + hhold['annuity_non_rrsp_after']
+        consumption = hhold['cons_after']
+        debt_payments = hhold['debt_payments_after']
+        net_liabilities = hhold['fam_net_tax_liability_after']
+        cpp = hhold['cpp_after']
+        gis = hhold['gis_after']
+        oas = hhold['oas_after']
+        rpp_db = hhold['rpp_db_benefits_after']
+        income = oas + gis + cpp + rpp_db + annuity + pension
 
-        l_expenses = ['net tax liability', 'debt payments']
+        label = ['income', # 0
+                'oas', 'gis', 'cpp', 'RPP DB', 'annuity', 'pension', # 1 to 6
+                'consumption', 'debt payments', # 7 - 8
+                'net tax liability']  # 9 could also enter income (invert source and target)
+        if net_liabilities > 0:
+            source = [1, 2, 3, 4, 5, 6, 0, 0, 0]
+            target = [0, 0, 0, 0, 0, 0, 7, 8, 9]
+            value =  [oas, gis, cpp, rpp_db, annuity, pension, consumption, debt_payments, net_liabilities]
+        else:
+            source = [1, 2, 3, 4, 5, 6, 0, 0, 9]
+            target = [0, 0, 0, 0, 0, 0, 7, 8, 0]
+            value =  [oas, gis, cpp, rpp_db, annuity, pension, consumption, debt_payments, -net_liabilities]
 
-        plt.figure(figsize=(10, 8))
+        # data to dict, dict to sankey
+        link = dict(source = source, target = target, value = value)
+        node = dict(label = label, pad=20, thickness=50)
 
-        income = 0
-        d_income = {}
-        labels = []
-        for var in l_income:
-            d_income[var] = income
-            income += d_results[var]
-        for var in reversed(l_income):
-            if d_results[var] != 0:
-                plt.bar(0, d_results[var], bottom=d_income[var], width=1)
-                labels.append(var)
-
-        expenses = 0
-        d_expenses = {}
-        for var in l_expenses:
-            d_expenses[var] = expenses
-            expenses += d_results[var]
-        for var in l_expenses:
-            if d_results[var] != 0:
-                plt.bar(1, -d_results[var], bottom=-d_expenses[var], width=1)
-                labels.append(var)      
-        plt.bar(2, d_results['consumption'], width=1)
-        labels.append('consumption')
-
-        plt.legend(labels, loc='upper center') 
-        plt.axhline(0, color='black', linestyle='--', linewidth=1)
-        plt.xticks((0, 1, 2), ('income', 'expenses', 'consumption'))
-        plt.grid()
-
-        st.pyplot(plt)
-
-        l_income = ['oas', 'gis', 'cpp', 'pension', 'RPP DC', 'RPP DB', 'annuity rrsp', 'annuity non-rrsp']
-
-        l_expenses = ['consumption', 'debt payments', 'net tax liability']
-
-        plt.figure(figsize=(10, 8))
-
-        income = 0
-        d_income = {}
-        labels = []
-        for var in l_income:
-            d_income[var] = income
-            income += d_results[var]
-        for var in reversed(l_income):
-            if d_results[var] != 0:
-                plt.bar(0, d_results[var], bottom=d_income[var], width=0.5)
-                labels.append(var)
-
-        expenses = 0
-        d_expenses = {}
-        for var in l_expenses:
-            d_expenses[var] = expenses
-            expenses += d_results[var]
-        for var in reversed(l_expenses):
-            if d_results[var] != 0:
-                plt.bar(1, d_results[var], bottom=d_expenses[var], width=0.5)
-                labels.append(var) 
-
-        plt.legend(labels, loc='upper center') 
-        plt.axhline(0, color='black', linestyle='--', linewidth=1)
-        plt.xticks((0, 1), ('income', 'expenses'))
-        plt.grid()
-
-        st.pyplot(plt)
+        data = go.Sankey(link=link, node=node)
+        # plot
+        fig = go.Figure(data)
+        fig.update_layout(height=450, width=650, title_text="<b>Retirement income decomposition</b>", font_size=16)
+        st.plotly_chart(fig)
 
     st.markdown("## Scroll to top to see the visualizations!")
     #st.balloons()
