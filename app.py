@@ -111,7 +111,7 @@ def info_spouse(which='first', step_amount=100):
                           ["Yes", "No"], key="dc_pension_"+which, index=1)
     if dc_pension == "Yes":
         st.markdown("### DC Pension")
-        d['init_dc'] = st.number_input("Annual amount of current pension", min_value=0,
+        d['init_dc'] = st.number_input("Current balance", min_value=0,
                                            step=step_amount, value=0, key="init_dc_" + which)
         d['rate_employee_dc'] = st.slider("Contribution rate employee of current DC (in %)",
                                               min_value=0.0, max_value=30.0, step=0.5,
@@ -174,11 +174,14 @@ def debts(step_amount=100):
 
 def info_residence(which, step_amount=100):
     d_res = {}
-    res = "the "+which+" residence"
+    res = "the " + which + " residence"
     res_value_str = "Value"
     d_res[f'{which}_residence'] = st.number_input(res_value_str, min_value=0, step=step_amount, key="res_value_"+which)
     res_buy_str = "Buying price"
-    d_res[f'price_{which}_residence'] = st.number_input(res_buy_str, min_value=0, step=step_amount, key="res_buy_"+which)
+    if which == 'first':
+        d_res[f'price_{which}_residence'] = d_res[f'{which}_residence']  # doesn't matter since cap gain not taxed
+    else:
+        d_res[f'price_{which}_residence'] = st.number_input(res_buy_str, min_value=0, step=step_amount, key="res_buy_"+which)
     res_mortgage_str = "Outstanding mortgage"
     d_res[f'{which}_mortgage'] = st.number_input(res_mortgage_str, min_value=0, step=step_amount, key="res_mortgage_"+which)
     res_mortgage_payment_str = "Monthly payment on mortgage"
