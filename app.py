@@ -492,6 +492,7 @@ if st.button("Show visualizations", False):
                         xaxis_title="before retirement", yaxis_title="after retirement",
                         font=dict(family="Courier New, monospace", size=14, color="RebeccaPurple"))
         st.plotly_chart(fig)
+    
 
         # Income decomposition
         # prepare data
@@ -505,6 +506,14 @@ if st.button("Show visualizations", False):
         gis = hhold['gis_after']
         oas = hhold['oas_after']
         rpp_db = hhold['rpp_db_benefits_after']
+        
+        if hhold['couple']:
+            pension += hhold['s_pension_after']
+            annuity += hhold['s_annuity_rrsp_after'] + hhold['s_annuity_rpp_dc_after'] + hhold['s_annuity_non_rrsp_after']
+            cpp += hhold['s_cpp_after']
+            gis += hhold['s_gis_after']
+            oas += hhold['s_oas_after']
+            rpp_db += hhold['s_rpp_db_benefits_after']
         income = oas + gis + cpp + rpp_db + annuity + pension
 
         label = ['income', # 0
