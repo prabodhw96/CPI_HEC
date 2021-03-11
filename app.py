@@ -464,6 +464,8 @@ if st.button("Show visualizations", False):
                           font=dict(family="Courier New, monospace", size=14, color="RebeccaPurple"),
                           legend={'traceorder':'reversed'})
         st.plotly_chart(fig)
+        
+        st.write('whatever i want')
 
         # Change contribution rate rrsp and retirement age
         df_change = create_data_changes(df)
