@@ -2,6 +2,7 @@ numpy
 pandas
 matplotlib
 seaborn
+plotly
 numba
 streamlit==0.76
 cpr-rsi
