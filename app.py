@@ -447,23 +447,39 @@ if st.button("Show visualizations", False):
     df_res = prepare_RRI(df)
     with col_p2:
         # Effect on uncertainty
-        nsim = 50
-        results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False, base_year=2020)
+        nsim = 25
+        results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False,
+                                    base_year=2020)
         df_output = results.output
+        df_output['RRI'] = (df_output.cons_after / df_output.cons_bef * 100).round(1)
+
         fig = go.Figure()
-        fig.add_scatter(x=df_output.cons_bef, y=df_output.cons_after, mode='markers', showlegend=False)
+        fig.add_scatter(x=df_output.cons_bef, y=df_output.cons_after,
+                        mode='markers', 
+                        marker=dict(size=10, line=dict(color='MediumPurple', width=2)),
+                        hovertemplate=
+                        'cons. bef. ret: $%{x:,.0f} <br>'+
+                        'cons. after ret: $%{y:,.0f} <br>'+
+                        '%{text}</b>' + 
+                        '<extra></extra>',
+                        text=['RRI: {:.0f}'.format(x) for x in df_output.RRI.values],
+                        showlegend = False)
+
         cons_bef = np.array([df_output.cons_bef.min(), df_output.cons_bef.max()])
-        fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef, mode='lines', name="RRI = 65", 
-                        line=dict(color="RoyalBlue", width=2, dash='dot')))
-        fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef, mode='lines', name="RRI = 80", 
-                        line=dict(color="Green", width=2, dash='dot')))
-        fig.update_layout(height=475, width=625,
-                          title={'text': f"<b>Consumptions ({nsim} realizations)</b>",
-                          'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
-                          xaxis_title="before retirement",
-                          yaxis_title="after retirement",
-                          font=dict(family="Courier New, monospace", size=14, color="RebeccaPurple"),
-                          legend={'traceorder':'reversed'})
+        fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
+                                mode='lines', name="RRI = 65",
+                                line=dict(color="RoyalBlue", width=2, dash='dot')))
+        fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
+                                mode='lines', name="RRI = 80",
+                                line=dict(color="Green", width=2, dash='dot')))
+        fig.update_layout(height=500, width=700,
+                        title={'text': f"Consumptions ({nsim} realizations)",
+                                'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
+                        xaxis_title="before retirement",
+                        yaxis_title="after retirement",
+                        font=dict(family="Courier New, monospace",
+                                    size=14, color="RebeccaPurple"),
+                        legend={'traceorder':'reversed'})
         st.plotly_chart(fig)
         
         st.write('whatever i want')
@@ -473,32 +489,49 @@ if st.button("Show visualizations", False):
         results = main.run_simulations(df_change, nsim=1, n_jobs=1, non_stochastic=True, base_year=2020)
         results.merge()
         df_change = results.df_merged
-        names = ['initial case', 'contrib rrsp + 5%', 'contrib rrsp + 10%', 'ret age -2', 'ret age +2']
+
+        names = ['initial case', 'contrib rrsp + 5%', 'contrib rrsp + 10%', 'ret age - 2', 'ret age + 2']
         init_cons_bef, init_cons_after = df_change.loc[0, ['cons_bef', 'cons_after']].values.squeeze().tolist()
+
         fig = go.Figure()
+
         l_cons_bef = []
         for index, row in df_change.iterrows():
             l_cons_bef.append(row['cons_bef'])
-            fig.add_scatter(x=[row['cons_bef']], y=[row['cons_after']], mode='markers', 
-                            marker=dict(size=10, line=dict(color='MediumPurple', width=2)), name=names[index])
-            fig.add_annotation(x=row['cons_bef'],  # arrows' head
-                               y=row['cons_after'],  # arrows' head
-                               ax=init_cons_bef,  # arrows' tail
-                               ay=init_cons_after,  # arrows' tail
-                               xref='x', yref='y', axref='x', ayref='y',
-                               text='',  # if you want only the arrow
-                               showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor='black', opacity=0.5)
+            rri = row['cons_after'] / row['cons_bef'] * 100
+            fig.add_scatter(x=[row['cons_bef']], y=[row['cons_after']],
+                            mode='markers', 
+                            marker=dict(size=10, line=dict(color='MediumPurple', width=2)),
+                            name=names[index],
+                            hovertemplate=
+                            '%{text} <br>'
+                            'cons. bef. ret: $%{x:,.0f} <br>'+
+                            'cons. after ret: $%{y:,.0f} <br>'+
+                            '<extra></extra>',
+                            text = [f'<b>{names[index]}</b> <br />RRI: {rri:.0f}'],
+                            showlegend = True)
+
         cons_bef = np.array([min(l_cons_bef), max(l_cons_bef)])
-        fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef, mode='lines', name="RRI = 65", 
+        fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
+                                mode='lines', name="RRI = 65",
                                 line=dict(color="RoyalBlue", width=1, dash='dot')))
-        fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef, mode='lines', name="RRI = 80", 
+        fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
+                                mode='lines', name="RRI = 80",
                                 line=dict(color="Green", width=1, dash='dot')))
-        fig.update_layout(height=475, width=625,
-                        title={'text': f"<b>Consumptions</b>", 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
-                        xaxis_title="before retirement", yaxis_title="after retirement",
-                        font=dict(family="Courier New, monospace", size=14, color="RebeccaPurple"))
+
+
+        fig.update_layout(height=500, width=700,
+                        title={'text': f"Consumptions",
+                                'x': 0.5,
+                                'xanchor': 'center',
+                                'yanchor': 'top'},
+                        xaxis_title="before retirement",
+                        yaxis_title="after retirement",
+                        font=dict(family="Courier New, monospace",
+                                    size=14,
+                                    color="RebeccaPurple"))
         st.plotly_chart(fig)
-    
+            
 
         # Income decomposition
         # prepare data
@@ -522,10 +555,10 @@ if st.button("Show visualizations", False):
             rpp_db += hhold['s_rpp_db_benefits_after']
         income = oas + gis + cpp + rpp_db + annuity + pension
 
-        label = ['income', # 0
-                'oas', 'gis', 'cpp', 'RPP DB', 'annuity', 'pension', # 1 to 6
-                'consumption', 'debt payments', # 7 - 8
-                'net tax liability']  # 9 could also enter income (invert source and target)
+        label = ['Income', # 0
+                'OAS', 'GIS', 'CPP', 'RPP DB', 'Annuity', 'Pension', # 1 to 6
+                'Consumption', 'Debt payments', # 7 - 8
+                'Net tax liability']  # 9 could also enter income (invert source and target)
         if net_liabilities > 0:
             source = [1, 2, 3, 4, 5, 6, 0, 0, 0]
             target = [0, 0, 0, 0, 0, 0, 7, 8, 9]
@@ -536,13 +569,19 @@ if st.button("Show visualizations", False):
             value =  [oas, gis, cpp, rpp_db, annuity, pension, consumption, debt_payments, -net_liabilities]
 
         # data to dict, dict to sankey
-        link = dict(source = source, target = target, value = value)
-        node = dict(label = label, pad=20, thickness=50)
+        link = dict(source = source,
+                    target = target,
+                    value = value,
+                    hovertemplate='$%{value:,.0f}<extra></extra>')
+        node = dict(label = label, pad=20, thickness=50,
+                    hovertemplate='$%{value:,.0f}<extra></extra>')
 
         data = go.Sankey(link=link, node=node)
         # plot
         fig = go.Figure(data)
-        fig.update_layout(height=450, width=650, title_text="<b>Retirement income decomposition</b>", font_size=16)
+        fig.update_layout(height=450, width=650,
+                        title_text="Retirement income decomposition",
+                        font_size=16)
         st.plotly_chart(fig)
 
     st.markdown("## Scroll to top to see the visualizations!")
