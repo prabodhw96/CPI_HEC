@@ -276,7 +276,7 @@ def fin_accounts(which, step_amount=100):
             key="bal_"+i+"_"+which)
         d_fin["cont_rate_"+i] = st.number_input(
             "Fraction of your earnings you plan to save in your {} account (in %)".format(
-                acc_cap[i]), value=0.0, min_value=0.0, max_value=100.0, step=0.5, key="cont_rate_"+i+"_"+which)
+                acc_cap[i]), value=0, min_value=0, max_value=100, step=1, key="cont_rate_"+i+"_"+which)
         d_fin["cont_rate_"+i] /= 100.0
         d_fin["withdrawal_"+i] = st.number_input(
             "Amount of your {} account you plan to spend (in $)".format(acc_cap[i]),
@@ -313,6 +313,7 @@ def financial_products(account, balance, which, step_amount=100):
                       "cvplp": "Amount in Checking or regular savings account",
                       "isf": "Amount in Individual segregated funds",
                       "etf": "Amount in ETFs"}
+
     fin_prods_rev = {v: k for k, v in fin_prods_dict.items()} #addition
     fin_prod_list = list(fin_prods_rev.keys()) #addition
     fin_prod_select = st.multiselect(label="Select financial products", 
