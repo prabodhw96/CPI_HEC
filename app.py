@@ -172,16 +172,24 @@ def debts(step_amount=100):
 
     return d_debts
 
-def info_residence(which, step_amount=100):
+def info_residence(which, step_amount=1000):
     d_res = {}
     res = "the " + which + " residence"
-    res_value_str = "Value"
-    d_res[f'{which}_residence'] = st.number_input(res_value_str, min_value=0, step=step_amount, key="res_value_"+which)
+    sell = st.radio("Do you plan to sell it", ["Yes", "No"], key=which+"_sell", index=1)
+    if sell == "Yes":
+        res_value_str = "Value"
+        d_res[f'{which}_residence'] = st.number_input(res_value_str, min_value=0, step=step_amount, key="res_value_"+which)
+    else:
+        d_res[f'{which}_residence'] = 0
     res_buy_str = "Buying price"
     if which == 'first':
         d_res[f'price_{which}_residence'] = d_res[f'{which}_residence']  # doesn't matter since cap gain not taxed
     else:
-        d_res[f'price_{which}_residence'] = st.number_input(res_buy_str, min_value=0, step=step_amount, key="res_buy_"+which)
+        if sell == "Yes":
+            d_res[f'price_{which}_residence'] = st.number_input(res_buy_str, min_value=0, step=step_amount, key="res_buy_"+which)
+        else:
+            d_res[f'price_{which}_residence'] = 0
+
     res_mortgage_str = "Outstanding mortgage"
     d_res[f'{which}_mortgage'] = st.number_input(res_mortgage_str, min_value=0, step=step_amount, key="res_mortgage_"+which)
     res_mortgage_payment_str = "Monthly payment on mortgage"
@@ -246,7 +254,7 @@ def info_hh(prod_dict, step_amount=100):
             d_others.update(info_residence(which))
 
     st.markdown("### Business")
-    business = st.radio("Do you own a business?", ["Yes", "No"], key="business", index=1)
+    business = st.radio("Do you own a business that you plan to sell?", ["Yes", "No"], key="business", index=1)
     if business == "Yes":
         d_others['business'] = st.number_input("Value of the business in 2020", min_value=0, step=step_amount, key="business_value")
         d_others['price_business'] = st.number_input("Buying price of the business", min_value=0, step=step_amount, 
@@ -328,9 +336,9 @@ def financial_products(account, balance, which, step_amount=100):
         st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(
                 total_fp, balance))
         st.stop()
-    else:
-        st.success("Total amount in financial products ({} $) = amount in financial account ({} $)".format(
-                    total_fp, balance))
+    #else:
+    #    st.success("Total amount in financial products ({} $) = amount in financial account ({} $)".format(
+    #                total_fp, balance))
     return d_fp
 
 def prepare_RRI(df):
@@ -421,7 +429,146 @@ st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', uns
 
 st.markdown("<h1 style='text-align: center;'>CPR Simulator</h1>", unsafe_allow_html=True)
 
-col_p1, _, col_p2 = st.beta_columns([0.55, 0.025, 0.425])
+col_p1, _, col_p2 = st.beta_columns([0.465, 0.025, 0.51])
+
+def show_plot_button(df):
+    df_res = prepare_RRI(df)
+    nsim = 25
+    results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False,
+                                base_year=2020)
+    df_output = results.output
+    df_output['RRI'] = (df_output.cons_after / df_output.cons_bef * 100).round(1)
+
+    fig = go.Figure()
+    fig.add_scatter(x=df_output.cons_bef, y=df_output.cons_after,
+                    mode='markers', 
+                    marker=dict(size=10, line=dict(color='MediumPurple', width=2)),
+                    hovertemplate=
+                    'cons. bef. ret: $%{x:,.0f} <br>'+
+                    'cons. after ret: $%{y:,.0f} <br>'+
+                    '%{text}</b>' + 
+                    '<extra></extra>',
+                    text=['RRI: {:.0f}'.format(x) for x in df_output.RRI.values],
+                    showlegend = False)
+
+    cons_bef = np.array([df_output.cons_bef.min(), df_output.cons_bef.max()])
+    fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
+                            mode='lines', name="RRI = 65",
+                            line=dict(color="RoyalBlue", width=2, dash='dot')))
+    fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
+                            mode='lines', name="RRI = 80",
+                            line=dict(color="Green", width=2, dash='dot')))
+    fig.update_layout(height=500, width=700,
+                    title={'text': f"Consumptions ({nsim} realizations)",
+                            'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
+                    xaxis_title="before retirement",
+                    yaxis_title="after retirement",
+                    font=dict(family="Courier New, monospace",
+                                size=14, color="RebeccaPurple"),
+                    legend={'traceorder':'reversed'})
+    st.plotly_chart(fig)
+    
+    st.write('whatever i want')
+
+    # Change contribution rate rrsp and retirement age
+    df_change = create_data_changes(df)
+    results = main.run_simulations(df_change, nsim=1, n_jobs=1, non_stochastic=True, base_year=2020)
+    results.merge()
+    df_change = results.df_merged
+
+    names = ['initial case', 'contrib rrsp + 5%', 'contrib rrsp + 10%', 'ret age - 2', 'ret age + 2']
+    init_cons_bef, init_cons_after = df_change.loc[0, ['cons_bef', 'cons_after']].values.squeeze().tolist()
+
+    fig = go.Figure()
+
+    l_cons_bef = []
+    for index, row in df_change.iterrows():
+        l_cons_bef.append(row['cons_bef'])
+        rri = row['cons_after'] / row['cons_bef'] * 100
+        fig.add_scatter(x=[row['cons_bef']], y=[row['cons_after']],
+                        mode='markers', 
+                        marker=dict(size=10, line=dict(color='MediumPurple', width=2)),
+                        name=names[index],
+                        hovertemplate=
+                        '%{text} <br>'
+                        'cons. bef. ret: $%{x:,.0f} <br>'+
+                        'cons. after ret: $%{y:,.0f} <br>'+
+                        '<extra></extra>',
+                        text = [f'<b>{names[index]}</b> <br />RRI: {rri:.0f}'],
+                        showlegend = True)
+
+    cons_bef = np.array([min(l_cons_bef), max(l_cons_bef)])
+    fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
+                            mode='lines', name="RRI = 65",
+                            line=dict(color="RoyalBlue", width=1, dash='dot')))
+    fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
+                            mode='lines', name="RRI = 80",
+                            line=dict(color="Green", width=1, dash='dot')))
+
+
+    fig.update_layout(height=500, width=700,
+                    title={'text': f"Consumptions",
+                            'x': 0.5,
+                            'xanchor': 'center',
+                            'yanchor': 'top'},
+                    xaxis_title="before retirement",
+                    yaxis_title="after retirement",
+                    font=dict(family="Courier New, monospace",
+                                size=14,
+                                color="RebeccaPurple"))
+    st.plotly_chart(fig)
+            
+
+    # Income decomposition
+    # prepare data
+    hhold = df_change.loc[0, :]
+    pension = hhold['pension_after']
+    annuity = hhold['annuity_rrsp_after'] + hhold['annuity_rpp_dc_after'] + hhold['annuity_non_rrsp_after']
+    consumption = hhold['cons_after']
+    debt_payments = hhold['debt_payments_after']
+    net_liabilities = hhold['fam_net_tax_liability_after']
+    cpp = hhold['cpp_after']
+    gis = hhold['gis_after']
+    oas = hhold['oas_after']
+    rpp_db = hhold['rpp_db_benefits_after']
+    
+    if hhold['couple']:
+        pension += hhold['s_pension_after']
+        annuity += hhold['s_annuity_rrsp_after'] + hhold['s_annuity_rpp_dc_after'] + hhold['s_annuity_non_rrsp_after']
+        cpp += hhold['s_cpp_after']
+        gis += hhold['s_gis_after']
+        oas += hhold['s_oas_after']
+        rpp_db += hhold['s_rpp_db_benefits_after']
+    income = oas + gis + cpp + rpp_db + annuity + pension
+
+    label = ['Income', # 0
+            'OAS', 'GIS', 'CPP', 'RPP DB', 'Annuity', 'Pension', # 1 to 6
+            'Consumption', 'Debt payments', # 7 - 8
+            'Net tax liability']  # 9 could also enter income (invert source and target)
+    if net_liabilities > 0:
+        source = [1, 2, 3, 4, 5, 6, 0, 0, 0]
+        target = [0, 0, 0, 0, 0, 0, 7, 8, 9]
+        value =  [oas, gis, cpp, rpp_db, annuity, pension, consumption, debt_payments, net_liabilities]
+    else:
+        source = [1, 2, 3, 4, 5, 6, 0, 0, 9]
+        target = [0, 0, 0, 0, 0, 0, 7, 8, 0]
+        value =  [oas, gis, cpp, rpp_db, annuity, pension, consumption, debt_payments, -net_liabilities]
+
+    # data to dict, dict to sankey
+    link = dict(source = source,
+                target = target,
+                value = value,
+                hovertemplate='$%{value:,.0f}<extra></extra>')
+    node = dict(label = label, pad=20, thickness=50,
+                hovertemplate='$%{value:,.0f}<extra></extra>')
+
+    data = go.Sankey(link=link, node=node)
+    # plot
+    fig = go.Figure(data)
+    fig.update_layout(height=450, width=650,
+                    title_text="Retirement income decomposition",
+                    font_size=16)
+    st.plotly_chart(fig)
 
 with col_p1:
     d_hh = ask_hh()
@@ -443,146 +590,10 @@ with col_p1:
             if ~df["s_"+i].notnull()[0] == 1:
                 df["s_"+i].fillna(0, inplace=True)
 
+with col_p2:
+    if st.button("Update visualizations", False):
+        show_plot_button(df)
+
 if st.button("Show visualizations", False):
-    df_res = prepare_RRI(df)
     with col_p2:
-        # Effect on uncertainty
-        nsim = 25
-        results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False,
-                                    base_year=2020)
-        df_output = results.output
-        df_output['RRI'] = (df_output.cons_after / df_output.cons_bef * 100).round(1)
-
-        fig = go.Figure()
-        fig.add_scatter(x=df_output.cons_bef, y=df_output.cons_after,
-                        mode='markers', 
-                        marker=dict(size=10, line=dict(color='MediumPurple', width=2)),
-                        hovertemplate=
-                        'cons. bef. ret: $%{x:,.0f} <br>'+
-                        'cons. after ret: $%{y:,.0f} <br>'+
-                        '%{text}</b>' + 
-                        '<extra></extra>',
-                        text=['RRI: {:.0f}'.format(x) for x in df_output.RRI.values],
-                        showlegend = False)
-
-        cons_bef = np.array([df_output.cons_bef.min(), df_output.cons_bef.max()])
-        fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
-                                mode='lines', name="RRI = 65",
-                                line=dict(color="RoyalBlue", width=2, dash='dot')))
-        fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
-                                mode='lines', name="RRI = 80",
-                                line=dict(color="Green", width=2, dash='dot')))
-        fig.update_layout(height=500, width=700,
-                        title={'text': f"Consumptions ({nsim} realizations)",
-                                'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
-                        xaxis_title="before retirement",
-                        yaxis_title="after retirement",
-                        font=dict(family="Courier New, monospace",
-                                    size=14, color="RebeccaPurple"),
-                        legend={'traceorder':'reversed'})
-        st.plotly_chart(fig)
-        
-        st.write('whatever i want')
-
-        # Change contribution rate rrsp and retirement age
-        df_change = create_data_changes(df)
-        results = main.run_simulations(df_change, nsim=1, n_jobs=1, non_stochastic=True, base_year=2020)
-        results.merge()
-        df_change = results.df_merged
-
-        names = ['initial case', 'contrib rrsp + 5%', 'contrib rrsp + 10%', 'ret age - 2', 'ret age + 2']
-        init_cons_bef, init_cons_after = df_change.loc[0, ['cons_bef', 'cons_after']].values.squeeze().tolist()
-
-        fig = go.Figure()
-
-        l_cons_bef = []
-        for index, row in df_change.iterrows():
-            l_cons_bef.append(row['cons_bef'])
-            rri = row['cons_after'] / row['cons_bef'] * 100
-            fig.add_scatter(x=[row['cons_bef']], y=[row['cons_after']],
-                            mode='markers', 
-                            marker=dict(size=10, line=dict(color='MediumPurple', width=2)),
-                            name=names[index],
-                            hovertemplate=
-                            '%{text} <br>'
-                            'cons. bef. ret: $%{x:,.0f} <br>'+
-                            'cons. after ret: $%{y:,.0f} <br>'+
-                            '<extra></extra>',
-                            text = [f'<b>{names[index]}</b> <br />RRI: {rri:.0f}'],
-                            showlegend = True)
-
-        cons_bef = np.array([min(l_cons_bef), max(l_cons_bef)])
-        fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
-                                mode='lines', name="RRI = 65",
-                                line=dict(color="RoyalBlue", width=1, dash='dot')))
-        fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
-                                mode='lines', name="RRI = 80",
-                                line=dict(color="Green", width=1, dash='dot')))
-
-
-        fig.update_layout(height=500, width=700,
-                        title={'text': f"Consumptions",
-                                'x': 0.5,
-                                'xanchor': 'center',
-                                'yanchor': 'top'},
-                        xaxis_title="before retirement",
-                        yaxis_title="after retirement",
-                        font=dict(family="Courier New, monospace",
-                                    size=14,
-                                    color="RebeccaPurple"))
-        st.plotly_chart(fig)
-            
-
-        # Income decomposition
-        # prepare data
-        hhold = df_change.loc[0, :]
-        pension = hhold['pension_after']
-        annuity = hhold['annuity_rrsp_after'] + hhold['annuity_rpp_dc_after'] + hhold['annuity_non_rrsp_after']
-        consumption = hhold['cons_after']
-        debt_payments = hhold['debt_payments_after']
-        net_liabilities = hhold['fam_net_tax_liability_after']
-        cpp = hhold['cpp_after']
-        gis = hhold['gis_after']
-        oas = hhold['oas_after']
-        rpp_db = hhold['rpp_db_benefits_after']
-        
-        if hhold['couple']:
-            pension += hhold['s_pension_after']
-            annuity += hhold['s_annuity_rrsp_after'] + hhold['s_annuity_rpp_dc_after'] + hhold['s_annuity_non_rrsp_after']
-            cpp += hhold['s_cpp_after']
-            gis += hhold['s_gis_after']
-            oas += hhold['s_oas_after']
-            rpp_db += hhold['s_rpp_db_benefits_after']
-        income = oas + gis + cpp + rpp_db + annuity + pension
-
-        label = ['Income', # 0
-                'OAS', 'GIS', 'CPP', 'RPP DB', 'Annuity', 'Pension', # 1 to 6
-                'Consumption', 'Debt payments', # 7 - 8
-                'Net tax liability']  # 9 could also enter income (invert source and target)
-        if net_liabilities > 0:
-            source = [1, 2, 3, 4, 5, 6, 0, 0, 0]
-            target = [0, 0, 0, 0, 0, 0, 7, 8, 9]
-            value =  [oas, gis, cpp, rpp_db, annuity, pension, consumption, debt_payments, net_liabilities]
-        else:
-            source = [1, 2, 3, 4, 5, 6, 0, 0, 9]
-            target = [0, 0, 0, 0, 0, 0, 7, 8, 0]
-            value =  [oas, gis, cpp, rpp_db, annuity, pension, consumption, debt_payments, -net_liabilities]
-
-        # data to dict, dict to sankey
-        link = dict(source = source,
-                    target = target,
-                    value = value,
-                    hovertemplate='$%{value:,.0f}<extra></extra>')
-        node = dict(label = label, pad=20, thickness=50,
-                    hovertemplate='$%{value:,.0f}<extra></extra>')
-
-        data = go.Sankey(link=link, node=node)
-        # plot
-        fig = go.Figure(data)
-        fig.update_layout(height=450, width=650,
-                        title_text="Retirement income decomposition",
-                        font_size=16)
-        st.plotly_chart(fig)
-
-    st.markdown("## Scroll to top to see the visualizations!")
-    #st.balloons()
+        show_plot_button(df)
