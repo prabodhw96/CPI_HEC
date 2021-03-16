@@ -5,7 +5,7 @@ import seaborn as sns
 import sys
 import pickle
 import math
-sys.path.insert(1, r'C:\Users\pyy\Dropbox (CEDIA)\CPR\Model')
+# sys.path.insert(1, r'C:\Users\pyy\Dropbox (CEDIA)\CPR\Model')
 from CPR import main
 import streamlit as st
 import plotly.graph_objects as go
@@ -49,10 +49,17 @@ def ask_hh():
 
 def info_spouse(which='first', step_amount=100):
     d = {}
-    d['byear'] = st.number_input("Birth Year", min_value=1900, max_value=2020, key="byear_"+which, value=1980)
+    d['byear'] = st.number_input("Birth Year", min_value=1900, max_value=2020,
+                                 key="byear_"+which, value=1980)
+    if d['byear'] < 1957:
+        st.error("Sorry, the simulator only works for people born after 1956")
+        st.stop()
+        
     d_gender = {'female': 'Female', 'male': 'Male'}
-    d['sex'] = st.radio("Gender", options=list(d_gender.keys()), format_func=lambda x: d_gender[x], key="sex_"+which, index=1)
-    d['ret_age'] = st.number_input("Retirement Age", min_value=2021-d['byear']+1, key="ret_age_"+which, value=65)
+    d['sex'] = st.radio("Gender", options=list(d_gender.keys()),
+                        format_func=lambda x: d_gender[x], key="sex_"+which, index=1)
+    age = 2021 - d['byear']
+    d['ret_age'] = st.number_input("Retirement Age", min_value=age+1, key="ret_age_"+which, value=max(age + 1, 65))
     d['claim_age_cpp'] = min(d['ret_age'], 70)
     st.success("claim age cpp: {} ({})&nbsp;&nbsp;&nbsp;&nbsp; claim age OAS: 65".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
     d_education = {'Certificate of Apprenticeship or Certificate of Qualification': 'post-secondary',
@@ -173,7 +180,8 @@ def debts(step_amount=100):
                'a car loan', 'a credit line', 'other debt']
 
     debt_names = list(dbt_dict.keys()) #addition
-    debt_list = st.multiselect(label="Select your debts", options=debt_names, key="debt_names") #addition
+    debt_list = st.multiselect(label="Select your debts", options=debt_names,
+                               key="debt_names") #addition
     l_names = debt_list #addition
 
     for i in l_names:
@@ -191,7 +199,8 @@ def debts(step_amount=100):
 def info_residence(which, step_amount=1000):
     d_res = {}
     res = "the " + which + " residence"
-    sell = st.radio("Do you plan to sell it", ["Yes", "No"], key=which+"_sell", index=1)
+    sell = st.radio("Do you plan to sell it upon retirement?", ["Yes", "No"],
+                    key=which+"_sell", index=1)
     if sell == "Yes":
         user_options[f'sell_{which}_resid'] = True
         res_value_str = "Value"
@@ -220,13 +229,15 @@ def mix_fee(prod_dict):
     df = pd.read_csv('mix_fee_assets.csv', index_col=0, usecols=range(0, 5))
     d_investments = {}
     total_sum = sum(prod_dict.values())
+    # portfolio for people without current savings (loosely calibrated from PowerCorp's database)
     if total_sum == 0:
         d_mix_fee = {}
-        d_mix_fee['fee_equity'] = 0
-        d_mix_fee["mix_bills"] = 0
-        d_mix_fee["mix_bonds"] = 0
-        d_mix_fee["mix_equity"] = 0
-        d_mix_fee["fee"] = 0
+        d_mix_fee['fee_equity'] = 0.005
+        d_mix_fee["mix_bills"] = 0.60
+        d_mix_fee["mix_bonds"] = 0.15
+        d_mix_fee["mix_equity"] = 0.25
+        d_mix_fee["fee"] = 0.015
+        
     else:
         d_investments["Checking or regular savings account"] = prod_dict["crsa"]/total_sum
         d_investments["High interest/premium savings account"] = prod_dict["hipsa"]/total_sum
@@ -234,8 +245,8 @@ def mix_fee(prod_dict):
         d_investments["Stocks"] = prod_dict["stocks"]/total_sum
         d_investments["Bonds"] = prod_dict["bonds"]/total_sum
         d_investments["GICs"] = prod_dict["gic"]/total_sum
-        # d_investments["Cash value of permanent life policy"] = prod_dict["cvplp"]/total_sum
-        # d_investments["Individual segregated funds"] = prod_dict["isf"]/total_sum
+        d_investments["Cash value of permanent life policy"] = prod_dict["cvplp"]/total_sum
+        d_investments["Individual segregated funds"] = prod_dict["isf"]/total_sum
         d_investments["ETFs"] = prod_dict["etf"]/total_sum
         d_mix_fee = {key: 0 for key in df.columns}
         df['fraction'] = pd.Series(d_investments)
@@ -247,14 +258,10 @@ def mix_fee(prod_dict):
             d_mix_fee['fee_equity'] = (df.equity * df.fraction * df.fee).sum() / (df.equity * df.fraction).sum()
         if math.isnan(d_mix_fee['fee_equity']):
             d_mix_fee['fee_equity'] = 0
-        d_mix_fee['fee_equity'] /= 100.0
         d_mix_fee["mix_bills"] = d_mix_fee.pop("bills")
-        d_mix_fee["mix_bills"] /= 100.0
         d_mix_fee["mix_bonds"] = d_mix_fee.pop("bonds")
-        d_mix_fee["mix_bonds"] /= 100.0
         d_mix_fee["mix_equity"] = d_mix_fee.pop("equity")
-        d_mix_fee["mix_equity"] /= 100.0
-        d_mix_fee["fee"] /= 100.0
+        
     return d_mix_fee
 
 def fin_accounts(which, step_amount=100):
@@ -401,7 +408,7 @@ def show_plot_button(df):
                     legend={'traceorder':'reversed'})
     st.plotly_chart(fig)
     
-    st.write('whatever i want TBC')
+    ## to add text: st.write('whatever i want TBC')
 
     # create data with changes in contribution rate rrsp and retirement age
     df_change = create_data_changes(df.copy())
@@ -452,8 +459,6 @@ def show_plot_button(df):
                                 size=14,
                                 color="RebeccaPurple"))
     st.plotly_chart(fig)
-            
-    st.dataframe(df_change)
     
     # Income decomposition
     # prepare data
@@ -484,7 +489,7 @@ def show_plot_button(df):
             'OAS', 'GIS', 'CPP', 'RPP DB', 'Annuity', 'Pension', 'Business Dividends', # 1 to 7
             'Consumption', 'Imputed Rent', 'Debt payments', # 8 - 10
             'Net tax liability']  # 11 could also enter income (invert source and target)
-    st.write(consumption, imputed_rent, debt_payments)
+
     if net_liabilities > 0:
         source = [1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0]
         target = [0, 0, 0, 0, 0, 0, 0, 8, 9, 10, 11]
@@ -507,7 +512,7 @@ def show_plot_button(df):
     data = go.Sankey(link=link, node=node)
     # plot
     fig = go.Figure(data)
-    fig.update_layout(height=450, width=650,
+    fig.update_layout(height=450, width=750,
                     title_text="Retirement income decomposition",
                     font_size=16)
     st.plotly_chart(fig)
