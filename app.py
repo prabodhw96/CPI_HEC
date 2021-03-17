@@ -548,6 +548,14 @@ st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', uns
 
 st.markdown("<h1 style='text-align: center;'>CPR Simulator</h1>", unsafe_allow_html=True)
 
+st.sidebar.markdown("# DISCLAIMER")
+st.sidebar.markdown("This tool uses the freely available [Canadians’ Preparation for Retirement (CPR) calculator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), \
+    developed by a team at [HEC Montréal](https://www.hec.ca/en/)’s Retirement and Savings Institute with financial support from the \
+    [Global Risk Institute](https://globalriskinstitute.org/)’s [National Pension Hub](https://globalriskinstitute.org/national-pension-hub/).")
+st.sidebar.markdown("It is provided “as is” for personal use only, without any warranty regarding its accuracy, appropriateness, completeness or any other quality.")
+st.sidebar.markdown("Its results are deemed to be general information on retirement preparation and should not be construed as financial advice; qualified financial advice should be sought before making any financial decision based on this tool.")
+st.sidebar.markdown("Use of the tool implies the acceptance of the foregoing terms and constitutes an acknowledgement that this disclaimer has been read and understood.")
+
 col_p1, _, col_p2 = st.beta_columns([0.465, 0.025, 0.51])
 
 with col_p1:
