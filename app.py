@@ -315,8 +315,6 @@ def financial_products(account, balance, which, step_amount=100):
                       "stocks": "Amount in Stocks",
                       "bonds": "Amount in Bonds",
                       "gic": "Amount in GICs",
-                      "cvplp": "Amount in Checking or regular savings account",
-                      "isf": "Amount in Individual segregated funds",
                       "etf": "Amount in ETFs"}
 
     fin_prods_rev = {v: k for k, v in fin_prods_dict.items()} #addition
@@ -365,6 +363,22 @@ def prepare_RRI(df):
     df_res['RRI'] = df_res.cons_after / df_res.cons_bef * 100
     return df_res
 
+def check_cons_positive(df, cons_floor = 0):
+    if len(df[df["cons_bef"] < cons_floor]):
+        st.error("Consumption before retirement is negative: savings or debt payments are too high")
+        st.stop()
+    if len(df[df["cons_after"] < cons_floor]):
+        st.error("Consumption after retirement is negative: debt payments are too high")
+        st.stop()
+
+def create_data_changes(df):
+    df_change = pd.DataFrame(np.repeat(df.values, 5, axis=0), columns=df.columns)
+    df_change.cont_rate_rrsp += np.array([0, 0.05, 0.10, 0, 0])
+    df_change.ret_age += np.array([0, 0, 0, -2, 2])
+    if any(df_change.couple) is True:
+        df_change.s_ret_age += np.array([0, 0, 0, -2, 2])
+    return df_change
+
 
 # GRAPHS
 
@@ -372,7 +386,7 @@ def show_plot_button(df):
     
     # stochastic results
     nsim = 25
-    results = main.run_simulations(df.copy(), nsim=nsim, n_jobs=1, non_stochastic=False,
+    results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False,
                                    base_year=2020, **user_options)
     df_output = results.output
     check_cons_positive(df_output, cons_floor = 0)
@@ -411,7 +425,7 @@ def show_plot_button(df):
     ## to add text: st.write('whatever i want TBC')
 
     # create data with changes in contribution rate rrsp and retirement age
-    df_change = create_data_changes(df.copy())
+    df_change = create_data_changes(df)
     results = main.run_simulations(df_change, nsim=1, n_jobs=1,non_stochastic=True,
                                    base_year=2020, **user_options)
     results.merge()
@@ -517,22 +531,6 @@ def show_plot_button(df):
                     font_size=16)
     st.plotly_chart(fig)
     
-def check_cons_positive(df, cons_floor = 0):
-    if len(df[df["cons_bef"] < cons_floor]):
-        st.error("Consumption before retirement is negative: savings or debt payments are too high")
-        st.stop()
-    if len(df[df["cons_after"] < cons_floor]):
-        st.error("Consumption after retirement is negative: debt payments are too high")
-        st.stop()
-
-def create_data_changes(df):
-    df_change = pd.DataFrame(np.repeat(df.values, 5, axis=0), columns=df.columns)
-    df_change.cont_rate_rrsp += np.array([0, 0.05, 0.10, 0, 0])
-    df_change.ret_age += np.array([0, 0, 0, -2, 2])
-    if any(df_change.couple) is True:
-        df_change.s_ret_age += np.array([0, 0, 0, -2, 2])
-    return df_change
-    
     
 # SCRIPT INTERFACE
 
@@ -567,7 +565,7 @@ with col_p1:
     if df['couple'][0]:
         s_fin_acc_cols = ['s_' + col for col in fin_acc_cols]
         fin_acc_cols += s_fin_acc_cols
-    df[fin_acc_cols].fillna(0, inplace=True)
+    df[fin_acc_cols] = df[fin_acc_cols].fillna(0)
 
 with col_p2:
     if st.button("Update visualizations", False):
