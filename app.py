@@ -16,7 +16,7 @@ def ask_hh():
     st.markdown("# Respondent")
     d_hh = info_spouse()
     st.markdown("## Do you have a spouse?")
-    spouse_ques = st.radio("Select", ["Yes", "No"], index=0)
+    spouse_ques = st.radio("Select", ["Yes", "No"], index=1)
     d_hh['couple'] =  (spouse_ques == "Yes")
     if d_hh['couple']:
         st.markdown("# Spouse")
@@ -62,19 +62,19 @@ def info_spouse(which='first', step_amount=100):
     d['ret_age'] = st.number_input("Retirement Age", min_value=age+1, key="ret_age_"+which, value=max(age + 1, 65))
     d['claim_age_cpp'] = min(d['ret_age'], 70)
     st.success("claim age cpp: {} ({})&nbsp;&nbsp;&nbsp;&nbsp; claim age OAS: 65".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
-    d_education = {'Certificate of Apprenticeship or Certificate of Qualification': 'post-secondary',
-                   "Bachelor's degree": 'university',
-                   'Program of 1 to 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
-                   'Trades certificate or diploma other than Certificate of Apprenticeship or Certificate of Qualification)': 'post-secondary',
-                   'Secondary (high) school diploma or equivalency certificate': 'high school',
-                   'Program of more than 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
-                   "Master's degree": 'university',
-                   'Program of 3 months to less than 1 year (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
-                   'No certificate, diploma or degree': 'less than high school',
-                   'University certificate or diploma above bachelor level': 'university',
-                   'Degree in medicine, dentistry, veterinary medicine or optometry': 'university',
-                   'University certificate or diploma below bachelor level': 'university',
-                   'Earned doctorate': 'university'}
+    d_education = {'No certificate, diploma or degree': 'less than high school',
+                    'Secondary (high) school diploma or equivalency certificate': 'high school',
+                    'Certificate of Apprenticeship or Certificate of Qualification': 'post-secondary',
+                    'Trades certificate or diploma other than Certificate of Apprenticeship or Certificate of Qualification)': 'post-secondary',
+                    'Program of 3 months to less than 1 year (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
+                    'Program of 1 to 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
+                    'Program of more than 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
+                    'University certificate or diploma below bachelor level': 'university',
+                    "Bachelor's degree": 'university',
+                    "Master's degree": 'university',
+                    'University certificate or diploma above bachelor level': 'university',
+                    'Degree in medicine, dentistry, veterinary medicine or optometry': 'university',
+                    'Earned doctorate': 'university'}
     degree = st.selectbox("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
     d['education'] = d_education[degree]
     d['init_wage'] = st.number_input("Annual Earnings for 2020", min_value=0, step=step_amount, key="init_wage_"+which, value=50000)
@@ -405,10 +405,20 @@ def show_plot_button(df):
                     text=['RRI: {:.0f}'.format(x) for x in df_output.RRI.values],
                     showlegend = False)
 
+    fig.add_scatter(x=[df_output.cons_bef.mean()], y=[df_output.cons_after.mean()],
+                    mode='markers', name='mean consumptions',
+                    marker_size=15, marker_symbol='x',
+                    hovertemplate=
+                    'cons. bef. ret: $%{x:,.0f} <br>'+
+                    'cons. after ret: $%{y:,.0f} <br>'+
+                    '%{text}</b>' + 
+                    '<extra></extra>',
+                    text=['RRI: {:.0f}'.format(x) for x in df_output.RRI.values])
+
     cons_bef = np.array([df_output.cons_bef.min(), df_output.cons_bef.max()])
     fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
                             mode='lines', name="RRI = 65",
-                            line=dict(color="RoyalBlue", width=2, dash='dot')))
+                            line=dict(color="RoyalBlue", width=2, dash='dash')))
     fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
                             mode='lines', name="RRI = 80",
                             line=dict(color="Green", width=2, dash='dot')))
@@ -439,12 +449,16 @@ def show_plot_button(df):
     fig = go.Figure()
 
     l_cons_bef = []
+    colors = ['black', 'red', 'green', 'red', 'green']
+    symbols = ['circle', 'diamond', 'diamond', 'x', 'x']
     for index, row in df_change.iterrows():
         l_cons_bef.append(row['cons_bef'])
         rri = row['cons_after'] / row['cons_bef'] * 100
         fig.add_scatter(x=[row['cons_bef']], y=[row['cons_after']],
-                        mode='markers', 
-                        marker=dict(size=10, line=dict(color='MediumPurple', width=2)),
+                        mode='markers',
+                        marker_color=colors[index],
+                        marker_symbol = symbols[index],
+                        marker=dict(size=12, line=dict(color='MediumPurple', width=2)),
                         name=names[index],
                         hovertemplate=
                         '%{text} <br>'
@@ -455,12 +469,14 @@ def show_plot_button(df):
                         showlegend = True)
 
     cons_bef = np.array([min(l_cons_bef), max(l_cons_bef)])
-    fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
-                            mode='lines', name="RRI = 65",
-                            line=dict(color="RoyalBlue", width=1, dash='dot')))
     fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
                             mode='lines', name="RRI = 80",
                             line=dict(color="Green", width=1, dash='dot')))
+
+    fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
+                            mode='lines', name="RRI = 65",
+                            line=dict(color="RoyalBlue", width=1, dash='dash')))
+
 
     fig.update_layout(height=500, width=700,
                     title={'text': f"Consumptions",
@@ -473,6 +489,7 @@ def show_plot_button(df):
                                 size=14,
                                 color="RebeccaPurple"))
     st.plotly_chart(fig)
+
     
     # Income decomposition
     # prepare data
