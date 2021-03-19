@@ -5,6 +5,7 @@ import seaborn as sns
 import sys
 import pickle
 import math
+# sys.path.insert(1, r'C:\Users\pyy\Dropbox (CEDIA)\CPR\Model')
 from CPR import main
 import streamlit as st
 import plotly.graph_objects as go
@@ -62,18 +63,12 @@ def info_spouse(which='first', step_amount=100):
     d['claim_age_cpp'] = min(d['ret_age'], 70)
     st.success("claim age cpp: {} ({})&nbsp;&nbsp;&nbsp;&nbsp; claim age OAS: 65".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
     d_education = {'No certificate, diploma or degree': 'less than high school',
-                    'Secondary (high) school diploma or equivalency certificate': 'high school',
-                    'Certificate of Apprenticeship or Certificate of Qualification': 'post-secondary',
-                    'Trades certificate or diploma other than Certificate of Apprenticeship or Certificate of Qualification)': 'post-secondary',
-                    'Program of 3 months to less than 1 year (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
-                    'Program of 1 to 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
-                    'Program of more than 2 years (College, CEGEP and other non-university certificates or diplomas)': 'post-secondary',
-                    'University certificate or diploma below bachelor level': 'university',
-                    "Bachelor's degree": 'university',
-                    "Master's degree": 'university',
-                    'University certificate or diploma above bachelor level': 'university',
-                    'Degree in medicine, dentistry, veterinary medicine or optometry': 'university',
-                    'Earned doctorate': 'university'}
+                   'Secondary (high) school diploma or equivalency certificate': 'high school',
+                   'Trade certificate or diploma': 'post-secondary',
+                   ' College, CEGEP or other non-university certificate or diploma (other than trade certificates or diplomas)': 'post-secondary',
+                   'University certificate or diploma below bachelor level': 'university',
+                   "Bachelor's degree": 'university',
+                   'University certificate or diploma above bachelor level': 'university'}
     degree = st.selectbox("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
     d['education'] = d_education[degree]
     d['init_wage'] = st.number_input("Annual Earnings for 2020", min_value=0, step=step_amount, key="init_wage_"+which, value=50000)
