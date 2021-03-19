@@ -5,7 +5,6 @@ import seaborn as sns
 import sys
 import pickle
 import math
-# sys.path.insert(1, r'C:\Users\pyy\Dropbox (CEDIA)\CPR\Model')
 from CPR import main
 import streamlit as st
 import plotly.graph_objects as go
@@ -49,7 +48,7 @@ def ask_hh():
 
 def info_spouse(which='first', step_amount=100):
     d = {}
-    d['byear'] = st.number_input("Birth Year", min_value=1900, max_value=2020,
+    d['byear'] = st.number_input("Birth Year", min_value=1957, max_value=2020,
                                  key="byear_"+which, value=1980)
     if d['byear'] < 1957:
         st.error("Sorry, the simulator only works for people born after 1956")
@@ -266,6 +265,7 @@ def mix_fee(prod_dict):
 
 def fin_accounts(which, step_amount=100):
     d_fin = {}
+    d_fin["bal_unreg"] = 0 #default
     st.markdown("### Savings account")
     saving_plan_select = st.multiselect(label="Select your savings accounts", 
                                         options=["RRSP", "TFSA", "Other Reg", "Unreg"], key="fin_acc_"+which) #addition
@@ -294,13 +294,14 @@ def fin_accounts(which, step_amount=100):
         if d_fin["bal_"+i] > 0:
             d_fin.update(financial_products(i, d_fin["bal_"+i], which, step_amount=step_amount))
 
-    st.markdown("### Gains and Losses in Unregistered Account")
-    d_fin['cap_gains_unreg'] = st.number_input(
-        "Balance of unrealized capital gains as of December 31, 2020",
-        value=0, min_value=0, step=step_amount, key="cap_gains_unreg_"+which)
-    d_fin['realized_losses_unreg'] = st.number_input(
-        "Realized losses in capital on unregistered account as of December 31, 2020",
-        value=0, min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
+    if d_fin["bal_unreg"] > 0:
+        st.markdown("### Gains and Losses in Unregistered Account")
+        d_fin['cap_gains_unreg'] = st.number_input(
+            "Balance of unrealized capital gains as of December 31, 2020",
+            value=0, min_value=0, step=step_amount, key="cap_gains_unreg_"+which)
+        d_fin['realized_losses_unreg'] = st.number_input(
+            "Realized losses in capital on unregistered account as of December 31, 2020",
+            value=0, min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
     return d_fin
 
 def financial_products(account, balance, which, step_amount=100):
