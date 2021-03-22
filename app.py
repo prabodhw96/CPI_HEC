@@ -128,7 +128,7 @@ def info_hh(prod_dict, step_amount=100):
     d_others.update(mix_fee(prod_dict))
     st.markdown("### Residences")
     for which in ['first', 'second']:
-        which_str = "Do you own a "+which+" residence?"
+        which_str = "Do you own a " + which + " residence?"
         res = st.radio(which_str, ["Yes", "No"], key=which, index=1)
         if res == "Yes":
             d_others.update(info_residence(which))
@@ -204,6 +204,13 @@ def info_residence(which, step_amount=1000):
         d_res[f'{which}_residence'] = 0
     res_buy_str = "Buying price"
     if which == 'first':
+        if sell == 'Yes':
+            downsize= st.radio("Do you plan to downsize upon retirement?", ["Yes", "No"],
+                    key=which+"_sell", index=1)
+            if downsize == 'Yes':
+                user_options['downsize'] = st.number_input(
+                    "By what percentage (in value) do you plan to downsize?", value=0, min_value=0,
+                    max_value=100, step=1, key="downsizing") / 100
         d_res[f'price_{which}_residence'] = d_res[f'{which}_residence']  # doesn't matter since cap gain not taxed
     else:
         if sell == "Yes":
@@ -213,7 +220,8 @@ def info_residence(which, step_amount=1000):
             d_res[f'price_{which}_residence'] = 0
 
     res_mortgage_str = "Outstanding mortgage"
-    d_res[f'{which}_mortgage'] = st.number_input(res_mortgage_str, min_value=0, step=step_amount, key="res_mortgage_"+which)
+    d_res[f'{which}_mortgage'] = st.number_input(
+        res_mortgage_str, min_value=0, step=step_amount, key="res_mortgage_"+which)
     res_mortgage_payment_str = "Monthly payment on mortgage"
     d_res[f'{which}_mortgage_payment'] = st.number_input(res_mortgage_payment_str, min_value=0, step=step_amount, 
                                                         key="res_mortgage_payment_"+which)
@@ -549,7 +557,8 @@ def show_plot_button(df):
 
 user_options = {'sell_business': False,
                 'sell_first_resid': False,
-                'sell_second_resid': False}
+                'sell_second_resid': False,
+                'downsize': 0}
 
 st.markdown(f"""<style>
     .reportview-container .main .block-container{{
