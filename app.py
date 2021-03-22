@@ -49,7 +49,7 @@ def ask_hh():
 
 def info_spouse(which='first', step_amount=100):
     d = {}
-    d['byear'] = st.number_input("Birth Year", min_value=1957, max_value=2020,
+    d['byear'] = st.number_input("Birth year", min_value=1957, max_value=2020,
                                  key="byear_"+which, value=1980)
     if d['byear'] < 1957:
         st.error("Sorry, the simulator only works for people born after 1956")
@@ -59,7 +59,7 @@ def info_spouse(which='first', step_amount=100):
     d['sex'] = st.radio("Gender", options=list(d_gender.keys()),
                         format_func=lambda x: d_gender[x], key="sex_"+which, index=1)
     age = 2021 - d['byear']
-    d['ret_age'] = st.number_input("Retirement Age", min_value=age+1, key="ret_age_"+which, value=max(age + 1, 65))
+    d['ret_age'] = st.number_input("Retirement age", min_value=age+1, key="ret_age_"+which, value=max(age + 1, 65))
     d['claim_age_cpp'] = min(d['ret_age'], 70)
     st.success("claim age cpp: {} ({})&nbsp;&nbsp;&nbsp;&nbsp; claim age OAS: 65".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
     d_education = {'No certificate, diploma or degree': 'less than high school',
@@ -71,9 +71,9 @@ def info_spouse(which='first', step_amount=100):
                    'University certificate or diploma above bachelor level': 'university'}
     degree = st.selectbox("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
     d['education'] = d_education[degree]
-    d['init_wage'] = st.number_input("Annual Earnings for 2020", min_value=0, step=step_amount, key="init_wage_"+which, value=50000)
+    d['init_wage'] = st.number_input("Annual earnings for 2020", min_value=0, step=step_amount, key="init_wage_"+which, value=50000)
 
-    pension = st.radio("Do you currently (in 2020) receive a pension?", ["Yes", "No"], key="pension_radio_"+which, index=1)
+    pension = st.radio("Do you currently receive a pension?", ["Yes", "No"], key="pension_radio_"+which, index=1)
     if pension == "Yes":
         d['pension'] = st.number_input("Yearly amount of pension",  min_value=0, step=step_amount, key="pension_"+which, value=0)   
 
@@ -122,7 +122,7 @@ def info_spouse(which='first', step_amount=100):
 def info_hh(prod_dict, step_amount=100):
     d_others = {}
     st.markdown("### Which province do you live in?")
-    d_prov = {"qc": "QC", "on": "Other (using the ON tax system)"}
+    d_prov = {"qc": "Quebec", "on": "Other (using the Ontario tax system)"}
     d_others['prov'] = st.selectbox("Province", options=list(d_prov.keys()),
                                     format_func=lambda x: d_prov[x], key="prov")
     d_others.update(mix_fee(prod_dict))
@@ -136,9 +136,9 @@ def info_hh(prod_dict, step_amount=100):
     st.markdown("### Business")
     business = st.radio("Do you own a business?", ["Yes", "No"], key="business", index=1)
     if business == "Yes":
-        d_others['business'] = st.number_input("Value of the business in 2020",
-                                               min_value=0, step=step_amount,
-                                               key="business_value")
+        d_others['business'] = st.number_input(
+            "Value of the business at the beginning of 2020", min_value=0,
+            step=step_amount, key="business_value")
         
         sell_business = st.radio("Do you plan to sell your business upon retirement?",
                  ["Yes", "No"], key="business", index=1)
@@ -164,30 +164,32 @@ def message_cpp(ret_age):
     return message
 
 def debts(step_amount=100):
-    d_debts = {}
-    dbt_dict = {'credit card debt':'credit_card', 'a personal loan':'personal_loan', 
-                'a student loan':'student_loan', 'a car loan':'car_loan',
-                'a credit line':'credit_line', 'other debt':'other_debt'}
-    l_debts = ['credit_card', 'personal_loan', 'student_loan', 'car_loan',
-               'credit_line', 'other_debt']
-    l_names = ['credit card debt', 'a personal loan', 'a student loan',
-               'a car loan', 'a credit line', 'other debt']
+    debt_dict = {'Credit card debt':'credit_card',
+                 'Personal loan':'personal_loan',
+                 'Student loan':'student_loan',
+                 'Car loan':'car_loan',
+                 'Credit line':'credit_line',
+                 'Other debt':'other_debt'}
+    l_debts = debt_dict.values()
 
-    debt_names = list(dbt_dict.keys()) #addition
-    debt_list = st.multiselect(label="Select your debts", options=debt_names,
+    debt_list = st.multiselect(label="Select your debts", options=list(debt_dict.keys()),
                                key="debt_names") #addition
-    l_names = debt_list #addition
 
-    for i in l_names:
+    d_debts = {}
+    for i in debt_list:
+        debt = debt_dict[i]
         st.markdown("### {}".format(i))
-        d_debts[dbt_dict[i]] = st.number_input("Balance", min_value=0, step=step_amount, key="debt_"+dbt_dict[i])
-        d_debts[dbt_dict[i]+"_payment"] = st.number_input("Monthly payment", min_value=0, step=step_amount, 
-                                                            key="debt_payment_"+dbt_dict[i], max_value=d_debts[dbt_dict[i]])
-
-    for key in [dbt_dict[i] for i in l_names]: #addition
-        if d_debts[key] == 0:
+        d_debts[debt] = st.number_input(
+        "Balance", min_value=0, step=step_amount, key="debt_"+debt_dict[i])
+        d_debts[debt + "_payment"] = st.number_input(
+            "Monthly payment", min_value=0, step=step_amount,
+            key="debt_payment_"+debt_dict[i])
+        
+    for key in l_debts: #addition
+        if key in d_debts and (d_debts[key] == 0):
             d_debts.pop(key, None)
-            d_debts.pop(key+"_payment", None)
+            d_debts.pop(key + "_payment", None)
+        
     return d_debts
 
 def info_residence(which, step_amount=1000):
@@ -197,9 +199,9 @@ def info_residence(which, step_amount=1000):
                     key=which+"_sell", index=1)
     if sell == "Yes":
         user_options[f'sell_{which}_resid'] = True
-        res_value_str = "Value"
-        d_res[f'{which}_residence'] = st.number_input(res_value_str, min_value=0,
-                                                      step=step_amount, key="res_value_"+which)
+        d_res[f'{which}_residence'] = st.number_input(
+            "Value at the beginning of 2020", in_value=0,
+            step=step_amount, key="res_value_"+which)
     else:
         d_res[f'{which}_residence'] = 0
     res_buy_str = "Buying price"
@@ -219,12 +221,12 @@ def info_residence(which, step_amount=1000):
         else:
             d_res[f'price_{which}_residence'] = 0
 
-    res_mortgage_str = "Outstanding mortgage"
     d_res[f'{which}_mortgage'] = st.number_input(
-        res_mortgage_str, min_value=0, step=step_amount, key="res_mortgage_"+which)
-    res_mortgage_payment_str = "Monthly payment on mortgage"
-    d_res[f'{which}_mortgage_payment'] = st.number_input(res_mortgage_payment_str, min_value=0, step=step_amount, 
-                                                        key="res_mortgage_payment_"+which)
+        "Outstanding mortgage at the beginning of 2020", min_value=0, step=step_amount,
+        key="res_mortgage_"+which)
+    d_res[f'{which}_mortgage_payment'] = st.number_input(
+        "Monthly payment on mortgage in 2020", min_value=0, step=step_amount,
+        key="res_mortgage_payment_"+which)
     return d_res
 
 def mix_fee(prod_dict):
@@ -291,19 +293,19 @@ def fin_accounts(which, step_amount=100):
             value=0, min_value=0, step=step_amount, key="withdrawal_"+i+"_"+which)
         if i in ["rrsp", "tfsa"]:
             d_fin["init_room_"+i] = st.number_input(
-                "Contribution room for {} in 2020".format(acc_cap[i]),
+                "Contribution room for {} at the beginning of 2020 ".format(acc_cap[i]),
                 value=0, min_value=0, step=step_amount, key="init_room_"+i+"_"+which)
 
         if d_fin["bal_"+i] > 0:
             d_fin.update(financial_products(i, d_fin["bal_"+i], which, step_amount=step_amount))
 
     if d_fin["bal_unreg"] > 0:
-        st.markdown("### Gains and Losses in Unregistered Account")
+        st.markdown("### Gains and losses in unregistered Account")
         d_fin['cap_gains_unreg'] = st.number_input(
-            "Balance of unrealized capital gains as of December 31, 2020",
+            "Balance of unrealized capital gains as of January 1, 2020",
             value=0, min_value=0, step=step_amount, key="cap_gains_unreg_"+which)
         d_fin['realized_losses_unreg'] = st.number_input(
-            "Realized losses in capital on unregistered account as of December 31, 2020",
+            "Realized losses in capital on unregistered account as of January 1, 2020",
             value=0, min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
     return d_fin
 
@@ -311,13 +313,13 @@ def financial_products(account, balance, which, step_amount=100):
     d_fp = {}
     total_fp = 0
     acc_cap = {"rrsp": "RRSP", "tfsa": "TFSA", "other_reg": "Other Reg", "unreg": "Unreg"}
-    st.markdown("### {} - Financial Products".format(acc_cap[account]))
+    st.markdown("### {} - Financial products".format(acc_cap[account]))
     fin_prods = ["crsa", "hipsa", "mf", "stocks", "bonds", "gic", "cvplp", "isf", "etf"]
-    fin_prods_dict = {"crsa": "Amount in Checking or regular savings account",
-                      "hipsa": "Amount in High interest/premium savings account",
-                      "mf": "Amount in Mutual funds",
-                      "stocks": "Amount in Stocks",
-                      "bonds": "Amount in Bonds",
+    fin_prods_dict = {"crsa": "Amount in checking or regular savings account",
+                      "hipsa": "Amount in high interest/premium savings account",
+                      "mf": "Amount in mtual funds",
+                      "stocks": "Amount in stocks",
+                      "bonds": "Amount in bonds",
                       "gic": "Amount in GICs",
                       "etf": "Amount in ETFs"}
 
@@ -352,21 +354,6 @@ def create_dataframe(d_hh):
     
     return pd.DataFrame(d_hh, columns=l_p + l_sp + l_hh, index=[0])
 
-def prepare_RRI(df):
-    results = main.run_simulations(df, nsim=20, n_jobs=1, non_stochastic=False,
-                                   base_year=2020, **user_options)
-    results.merge()
-    df_res = results.df_merged
-    cons_floor = 0
-    if len(df_res[df_res["cons_bef"] < cons_floor]):
-        st.error("Consumption before retirement is negative: savings or debt payments are too high")
-        st.stop()
-    if len(df_res[df_res["cons_after"] < cons_floor]):
-        st.error("Consumption after retirement is negative: debt payments are too high")
-        st.stop()
-    df_res['RRI'] = df_res.cons_after / df_res.cons_bef * 100
-    return df_res
-
 def check_cons_positive(df, cons_floor = 0):
     if len(df[df["cons_bef"] < cons_floor]):
         st.error("Consumption before retirement is negative: savings or debt payments are too high")
@@ -391,7 +378,8 @@ def show_plot_button(df):
     # stochastic results
     nsim = 25
     results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False,
-                                   base_year=2020, **user_options)
+                                   base_year=2020, **user_options, **returns)
+    
     df_output = results.output
     check_cons_positive(df_output, cons_floor = 0)
     df_output['RRI'] = (df_output.cons_after / df_output.cons_bef * 100).round(1)
@@ -441,7 +429,7 @@ def show_plot_button(df):
     # create data with changes in contribution rate rrsp and retirement age
     df_change = create_data_changes(df)
     results = main.run_simulations(df_change, nsim=1, n_jobs=1,non_stochastic=True,
-                                   base_year=2020, **user_options)
+                                   base_year=2020, **user_options, **returns)
     results.merge()
     df_change = results.df_merged
     
@@ -521,8 +509,8 @@ def show_plot_button(df):
     income = oas + gis + cpp + rpp_db + annuity + pension
 
     label = ['Income', # 0
-            'OAS', 'GIS', 'CPP', 'RPP DB', 'Annuity', 'Pension', 'Business Dividends', # 1 to 7
-            'Consumption', 'Imputed Rent', 'Debt payments', # 8 - 10
+            'OAS', 'GIS', 'CPP', 'RPP DB', 'Annuity', 'Pension', 'Business dividends', # 1 to 7
+            'Consumption', 'Imputed rent', 'Debt payments', # 8 - 10
             'Net tax liability']  # 11 could also enter income (invert source and target)
 
     if net_liabilities > 0:
@@ -555,10 +543,19 @@ def show_plot_button(df):
     
 # SCRIPT INTERFACE
 
+# default options
 user_options = {'sell_business': False,
                 'sell_first_resid': False,
                 'sell_second_resid': False,
                 'downsize': 0}
+
+# parameters for 2020 instead of 2018:
+returns = {'ret_equity_2018': 0.0313,
+           'ret_bills_2018': -0.0193,
+           'ret_bonds_2018': -0.0129,
+           'ret_housing_2018': 0.1062,
+           'price_rent_2018': 20,
+           'ret_business_2018': 0.0313}
 
 st.markdown(f"""<style>
     .reportview-container .main .block-container{{
