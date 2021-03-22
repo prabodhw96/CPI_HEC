@@ -59,7 +59,8 @@ def info_spouse(which='first', step_amount=100):
     d['sex'] = st.radio("Gender", options=list(d_gender.keys()),
                         format_func=lambda x: d_gender[x], key="sex_"+which, index=1)
     age = 2021 - d['byear']
-    d['ret_age'] = st.number_input("Retirement age", min_value=age+1, key="ret_age_"+which, value=max(age + 1, 65))
+    d['ret_age'] = st.number_input("Retirement age", min_value=age+1,
+                                   key="ret_age_"+which, value=max(age + 1, 65))
     d['claim_age_cpp'] = min(d['ret_age'], 70)
     st.success("claim age cpp: {} ({})&nbsp;&nbsp;&nbsp;&nbsp; claim age OAS: 65".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
     d_education = {'No certificate, diploma or degree': 'less than high school',
@@ -71,11 +72,12 @@ def info_spouse(which='first', step_amount=100):
                    'University certificate or diploma above bachelor level': 'university'}
     degree = st.selectbox("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
     d['education'] = d_education[degree]
-    d['init_wage'] = st.number_input("Annual earnings for 2020", min_value=0, step=step_amount, key="init_wage_"+which, value=50000)
+    d['init_wage'] = st.number_input("Annual earnings for 2020 ($)", min_value=0,
+                                     step=step_amount, key="init_wage_"+which, value=50000)
 
-    pension = st.radio("Do you currently receive a pension?", ["Yes", "No"], key="pension_radio_"+which, index=1)
+    pension = st.radio("Did you receive a pension in 2020?", ["Yes", "No"], key="pension_radio_"+which, index=1)
     if pension == "Yes":
-        d['pension'] = st.number_input("Yearly amount of pension",  min_value=0, step=step_amount, key="pension_"+which, value=0)   
+        d['pension'] = st.number_input("Yearly amount of pension ($)",  min_value=0, step=step_amount, key="pension_"+which, value=0)   
 
     savings_plan = st.radio("Do you have any savings or plan to save in the future?", ["Yes", "No"], 
                             key="savings_plan_"+which, index=1)
@@ -96,14 +98,14 @@ def info_spouse(which='first', step_amount=100):
             "Contribution rate employee of current DB (in %)", min_value=0.0,
             max_value=9.0, step=0.5, key="rate_employee_db_"+which, value=5.0) / 100
         d['income_previous_db'] = st.number_input(
-            "Amount of DB pension from previous employer", min_value=0,
+            "Amount of DB pension from previous employer ($)", min_value=0,
             step=step_amount, key="income_previous_db_" + which)
 
     dc_pension = st.radio("Do you have a DC pension from current or previous employer",
                           ["Yes", "No"], key="dc_pension_"+which, index=1)
     if dc_pension == "Yes":
         st.markdown("### DC Pension")
-        d['init_dc'] = st.number_input("Current balance", min_value=0,
+        d['init_dc'] = st.number_input("Current balance ($)", min_value=0,
                                        step=step_amount, value=0, key="init_dc_" + which)
         d['rate_employee_dc'] = st.slider(
             "Contribution rate employee of current DC (in %)", min_value=0.0,
@@ -137,7 +139,7 @@ def info_hh(prod_dict, step_amount=100):
     business = st.radio("Do you own a business?", ["Yes", "No"], key="business", index=1)
     if business == "Yes":
         d_others['business'] = st.number_input(
-            "Value of the business at the beginning of 2020", min_value=0,
+            "Value of the business at the beginning of 2020 ($)", min_value=0,
             step=step_amount, key="business_value")
         
         sell_business = st.radio("Do you plan to sell your business upon retirement?",
@@ -145,7 +147,7 @@ def info_hh(prod_dict, step_amount=100):
         if sell_business == 'Yes':
             user_options['sell_business'] = True
             d_others['price_business'] = st.number_input(
-                "Buying price of the business", min_value=0, step=step_amount,
+                "Buying price of the business ($)", min_value=0, step=step_amount,
                 key="business_price")
 
     st.markdown("### Debts other than mortgage")
@@ -172,7 +174,7 @@ def debts(step_amount=100):
                  'Other debt':'other_debt'}
     l_debts = debt_dict.values()
 
-    debt_list = st.multiselect(label="Select your debts", options=list(debt_dict.keys()),
+    debt_list = st.multiselect(label="Select your debts types", options=list(debt_dict.keys()),
                                key="debt_names") #addition
 
     d_debts = {}
@@ -180,9 +182,10 @@ def debts(step_amount=100):
         debt = debt_dict[i]
         st.markdown("### {}".format(i))
         d_debts[debt] = st.number_input(
-        "Balance", min_value=0, step=step_amount, key="debt_"+debt_dict[i])
+        "Outstanding balance at the beginning of 2020 ($)", min_value=0,
+        step=step_amount, key="debt_"+debt_dict[i])
         d_debts[debt + "_payment"] = st.number_input(
-            "Monthly payment", min_value=0, step=step_amount,
+            "Monthly payment ($)", min_value=0, step=step_amount,
             key="debt_payment_"+debt_dict[i])
         
     for key in l_debts: #addition
@@ -200,11 +203,11 @@ def info_residence(which, step_amount=1000):
     if sell == "Yes":
         user_options[f'sell_{which}_resid'] = True
         d_res[f'{which}_residence'] = st.number_input(
-            "Value at the beginning of 2020", in_value=0,
+            "Value at the beginning of 2020 ($)", in_value=0,
             step=step_amount, key="res_value_"+which)
     else:
         d_res[f'{which}_residence'] = 0
-    res_buy_str = "Buying price"
+
     if which == 'first':
         if sell == 'Yes':
             downsize= st.radio("Do you plan to downsize upon retirement?", ["Yes", "No"],
@@ -217,15 +220,15 @@ def info_residence(which, step_amount=1000):
     else:
         if sell == "Yes":
             d_res[f'price_{which}_residence'] = st.number_input(
-                res_buy_str, min_value=0, step=step_amount, key="res_buy_"+which)
+                "Buying price ($)", min_value=0, step=step_amount, key="res_buy_"+which)
         else:
             d_res[f'price_{which}_residence'] = 0
 
     d_res[f'{which}_mortgage'] = st.number_input(
-        "Outstanding mortgage at the beginning of 2020", min_value=0, step=step_amount,
+        "Outstanding mortgage at the beginning of 2020 ($)", min_value=0, step=step_amount,
         key="res_mortgage_"+which)
     d_res[f'{which}_mortgage_payment'] = st.number_input(
-        "Monthly payment on mortgage in 2020", min_value=0, step=step_amount,
+        "Monthly payment on mortgage in 2020 ($)", min_value=0, step=step_amount,
         key="res_mortgage_payment_"+which)
     return d_res
 
@@ -282,14 +285,14 @@ def fin_accounts(which, step_amount=100):
     for i in accs:
         st.markdown("### {}".format(acc_cap[i]))
         d_fin["bal_"+i] = st.number_input(
-            "Amount in {} account".format(acc_cap[i]), value=0, min_value=0, step=step_amount,
+            "Amount in {} account  ($)".format(acc_cap[i]), value=0, min_value=0, step=step_amount,
             key="bal_"+i+"_"+which)
         d_fin["cont_rate_"+i] = st.number_input(
             "Fraction of your earnings you plan to save in your {} account (in %)".format(
                 acc_cap[i]), value=0, min_value=0, max_value=100, step=1, key="cont_rate_"+i+"_"+which)
         d_fin["cont_rate_"+i] /= 100.0
         d_fin["withdrawal_"+i] = st.number_input(
-            "Amount of your {} account you plan to spend (in $)".format(acc_cap[i]),
+            "Amount of your {} account you plan to spend ($)".format(acc_cap[i]),
             value=0, min_value=0, step=step_amount, key="withdrawal_"+i+"_"+which)
         if i in ["rrsp", "tfsa"]:
             d_fin["init_room_"+i] = st.number_input(
@@ -302,10 +305,10 @@ def fin_accounts(which, step_amount=100):
     if d_fin["bal_unreg"] > 0:
         st.markdown("### Gains and losses in unregistered Account")
         d_fin['cap_gains_unreg'] = st.number_input(
-            "Balance of unrealized capital gains as of January 1, 2020",
+            "Balance of unrealized capital gains as of January 1, 2020 ($)",
             value=0, min_value=0, step=step_amount, key="cap_gains_unreg_"+which)
         d_fin['realized_losses_unreg'] = st.number_input(
-            "Realized losses in capital on unregistered account as of January 1, 2020",
+            "Realized losses in capital on unregistered account as of January 1, 2020 ($)",
             value=0, min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
     return d_fin
 
@@ -325,8 +328,9 @@ def financial_products(account, balance, which, step_amount=100):
 
     fin_prods_rev = {v: k for k, v in fin_prods_dict.items()} #addition
     fin_prod_list = list(fin_prods_rev.keys()) #addition
-    fin_prod_select = st.multiselect(label="Select financial products", 
-                                    options=fin_prod_list, key="fin_prod_list_"+account+"_"+which) #addition
+    fin_prod_select = st.multiselect(
+        label="Select financial products", options=fin_prod_list,
+        key="fin_prod_list_"+account+"_"+which) #addition
     fin_prods = [fin_prods_rev[i] for i in fin_prod_select] #addition
     for i in fin_prods:
         d_fp[account+"_"+i] = st.number_input(fin_prods_dict[i], value=0, min_value=0,
@@ -398,7 +402,7 @@ def show_plot_button(df):
                     showlegend = False)
 
     fig.add_scatter(x=[df_output.cons_bef.mean()], y=[df_output.cons_after.mean()],
-                    mode='markers', name='mean consumptions',
+                    mode='markers', name='Mean consumptions',
                     marker_size=15, marker_symbol='x',
                     hovertemplate=
                     'cons. bef. ret: $%{x:,.0f} <br>'+
@@ -409,16 +413,18 @@ def show_plot_button(df):
 
     cons_bef = np.array([df_output.cons_bef.min(), df_output.cons_bef.max()])
     fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
-                            mode='lines', name="RRI = 65",
+                            mode='lines', name="Replacement rate = 65%",
                             line=dict(color="RoyalBlue", width=2, dash='dash')))
     fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
-                            mode='lines', name="RRI = 80",
+                            mode='lines', name="Replacement rate = 80%",
                             line=dict(color="Green", width=2, dash='dot')))
     fig.update_layout(height=500, width=700,
-                    title={'text': f"Consumptions ({nsim} realizations)",
+                    title={'text': f"Household consumption before and after retirement ($) <br>({nsim} realizations)",
                             'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
-                    xaxis_title="before retirement",
-                    yaxis_title="after retirement",
+                    xaxis_title="Before retirement",
+                    xaxis_tickformat=",",
+                    yaxis_title="After retirement",
+                    yaxis_tickformat=",",
                     font=dict(family="Courier New, monospace",
                                 size=14, color="RebeccaPurple"),
                     legend={'traceorder':'reversed'})
@@ -433,10 +439,10 @@ def show_plot_button(df):
     results.merge()
     df_change = results.df_merged
     
-    
     # graph changes in contribution rate rrsp and retirement age
-    names = ['initial case', 'contrib rrsp + 5%', 'contrib rrsp + 10%',
-             'ret age - 2', 'ret age + 2']
+    names = ['Initial case', 'RRSP contrib + 5%', 'RRSP contrib + 10%',
+            'Retirement age - 2', 'Retirement age + 2']
+    init_cons_bef, init_cons_after = df_change.loc[0, ['cons_bef', 'cons_after']].values.squeeze().tolist()
 
     fig = go.Figure()
 
@@ -462,21 +468,23 @@ def show_plot_button(df):
 
     cons_bef = np.array([min(l_cons_bef), max(l_cons_bef)])
     fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
-                            mode='lines', name="RRI = 80",
-                            line=dict(color="Green", width=1, dash='dot')))
+                            mode='lines', name="Replacement rate = 80%",
+                            line=dict(color="Green", width=2, dash='dot')))
 
     fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
-                            mode='lines', name="RRI = 65",
-                            line=dict(color="RoyalBlue", width=1, dash='dash')))
+                            mode='lines', name="Replacement rate = 65%",
+                            line=dict(color="RoyalBlue", width=2, dash='dash')))
 
 
     fig.update_layout(height=500, width=700,
-                    title={'text': f"Consumptions",
+                    title={'text': f"Household consumption before and after retirement <br> under alternative scenarios ($)",
                             'x': 0.5,
                             'xanchor': 'center',
                             'yanchor': 'top'},
-                    xaxis_title="before retirement",
-                    yaxis_title="after retirement",
+                    xaxis_title="Before retirement",
+                    xaxis_tickformat=",",
+                    yaxis_title="After retirement",
+                    yaxis_tickformat=",",
                     font=dict(family="Courier New, monospace",
                                 size=14,
                                 color="RebeccaPurple"))
@@ -595,9 +603,9 @@ with col_p1:
     df[fin_acc_cols] = df[fin_acc_cols].fillna(0)
 
 with col_p2:
-    if st.button("Update visualizations", False):
+    if st.button("Update figures", False):
         show_plot_button(df)
 
-if st.button("Show visualizations", False):
+if st.button("Show figures", False):
     with col_p2:
         show_plot_button(df)
