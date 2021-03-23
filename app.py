@@ -592,14 +592,6 @@ st.markdown(f"""<style>
 st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
 
 st.markdown(f"""<style>
-    .tooltip .tooltiptext {{
-    width: 120px;
-    top: 100%;
-    left: 50%;
-    margin-left: -60px;}}
-    </style>""", unsafe_allow_html=True)
-
-st.markdown(f"""<style>
     .tooltip {{
     position: relative;
     display: inline-block;
