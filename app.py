@@ -11,7 +11,7 @@ import streamlit as st
 import plotly.graph_objects as go
 from PIL import Image
 import locale
-locale.setlocale(locale.LC_ALL, 'en_CA')
+locale.setlocale(locale.LC_ALL, 'en_C.utf8')
 
 # DEFINE FUNCTIONS
 
