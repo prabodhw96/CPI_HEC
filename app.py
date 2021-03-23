@@ -9,6 +9,9 @@ import math
 from CPR import main
 import streamlit as st
 import plotly.graph_objects as go
+from PIL import Image
+import locale
+locale.setlocale(locale.LC_ALL, 'en_CA')
 
 # DEFINE FUNCTIONS
 
@@ -62,8 +65,8 @@ def info_spouse(which='first', step_amount=100):
     d['ret_age'] = st.number_input("Intended retirement age", min_value=age+1,
                                    key="ret_age_"+which, value=max(age + 1, 65))
     d['claim_age_cpp'] = min(d['ret_age'], 70)
-    st.success("CPP/QPP claim age is set at the retirement age you entered above, but no less than 60 y.o. and no more than 70 y.o. &nbsp; OAS claim age is set at 65 y.o. ")
-    
+    st.markdown("""<div class="tooltip">CPP<span class="tooltiptext">Canadian Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> claim age is set at the retirement age you entered above, but no less than 60 y.o. and no more than 70 y.o. &nbsp; OAS claim age is set at 65 y.o.""", unsafe_allow_html=True)
+    st.text("")
     d_education = {'No certificate, diploma or degree': 'less than high school',
                    'Secondary (high) school diploma or equivalency certificate': 'high school',
                    'Trade certificate or diploma': 'post-secondary',
@@ -196,7 +199,7 @@ def info_residence(which, step_amount=1000):
     if sell == "Yes":
         user_options[f'sell_{which}_resid'] = True
         d_res[f'{which}_residence'] = st.number_input(
-            "Value at the beginning of 2020 ($)", in_value=0,
+            "Value at the beginning of 2020 ($)", min_value=0,
             step=step_amount, key="res_value_"+which)
     else:
         d_res[f'{which}_residence'] = 0
@@ -276,12 +279,12 @@ def fin_accounts(which, step_amount=100):
     saving_plan_select = st.multiselect(
         label="Select your savings accounts", options= [v for v in d_accounts.values()],
         key="fin_acc_"+which)
-    
+
     for i in saving_plan_select:
         st.markdown("### {}".format(i))
         d_fin["bal_"+i] = st.number_input(
-            "Balance of your {} accounts at the beginning of 2020 (in $)".format(d_accounts_inv[i]), value=0, min_value=0, step=step_amount,
-            key="bal_"+i+"_"+which)
+            "Balance of your {} accounts at the beginning of 2020 (in $)".format(d_accounts_inv[i]), value=0, min_value=0, 
+            step=step_amount, key="bal_"+i+"_"+which)
         d_fin["cont_rate_"+i] = st.number_input(
             "Fraction of your earnings you plan to save annually in your {} accounts (in %)".format(
                 d_accounts_inv[i]), value=0, min_value=0, max_value=100, step=1, key="cont_rate_"+i+"_"+which)
@@ -295,8 +298,7 @@ def fin_accounts(which, step_amount=100):
                 value=0, min_value=0, step=step_amount, key="init_room_"+i+"_"+which)
 
         if d_fin["bal_"+i] > 0:
-            d_fin.update(financial_products(i, d_fin["bal_"+i], which, d_accounts_inv,
-                                            step_amount=step_amount))
+            d_fin.update(financial_products(i, d_fin["bal_"+i], which, d_accounts_inv, step_amount=step_amount))
 
     if d_fin["bal_unreg"] > 0:
         st.markdown("### Gains and losses in unregistered Account")
@@ -334,7 +336,7 @@ def financial_products(account, balance, which, d_accounts_inv, step_amount=100)
 
     if total_fp != balance:
         st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(
-                total_fp, balance))
+                locale.format_string("%d", total_fp, grouping=True), locale.format_string("%d", balance, grouping=True)))
         st.stop()
     return d_fp
 
@@ -424,6 +426,8 @@ def show_plot_button(df):
                                 size=14, color="RebeccaPurple"),
                     legend={'traceorder':'reversed'})
     st.plotly_chart(fig)
+    with st.beta_expander("HOW TO READ THIS FIGURE"):
+        st.write("This figure shows 25 “realizations” of consumption possibilities just before and just after retirement, depending on how the various stochastic processes in the simulator turn out (e.g., for future earnings or investment returns). The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.")
     
     ## to add text: st.write('whatever i want TBC')
 
@@ -483,7 +487,14 @@ def show_plot_button(df):
                     font=dict(family="Courier New, monospace",
                                 size=14,
                                 color="RebeccaPurple"))
+    st.text("")
+    st.text("")
+    st.text("")
+    st.text("")
     st.plotly_chart(fig)
+    with st.beta_expander("HOW TO READ THIS FIGURE"):
+        st.write("This figure shows the main “realization” of consumption possibilities just before and just after retirement, with the variousstochastic processes turned off (in this case there is no possible variation, as in figure #1; everything is projected deterministically, with fixed processes). The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.")
+        st.write("The other 4 points shown in the figure illustrate the effect of alternative actions for you: A) retirement 2 years later than you indicated; B) retiring 2 years earlier then you indicated; C) contributing to an RSSP 5% more of your earnings than you indicated; D) contributing to an RSSP 10% more of your earnings than you indicated.")
 
     
     # Income decomposition
@@ -545,7 +556,13 @@ def show_plot_button(df):
         xaxis_title="Before retirement", xaxis_tickformat=",",
         yaxis_title="After retirement", yaxis_tickformat=",",
         font=dict(family="Courier New, monospace", size=14, color="RebeccaPurple"))
+    st.text("")
+    st.text("")
+    st.text("")
+    st.text("")
     st.plotly_chart(fig)
+    with st.beta_expander("HOW TO READ THIS FIGURE"):
+        st.write("This figure shows the decomposition of your household’s income in retirement: on the left are the various income sources, including the annuity purchased upon retirement with all your financial wealth; and on the right are the uses of that income. Forhomeowners who choose to sell their home at retirement, this includes a “rent equivalent”, to account for the fact that no rent had to be paid prior to retirement and make consumption possibilities comparable. In certain cases, “Net tax liability” will appear as an income source because it is negative – i.e., the household has more credits and deductions than it has taxes to pay.")
     
     
 # SCRIPT INTERFACE
@@ -572,15 +589,75 @@ st.markdown(f"""<style>
 
 st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center;'>CPR Simulator</h1>", unsafe_allow_html=True)
+st.markdown(f"""<style>
+    .tooltip .tooltiptext {{
+    width: 120px;
+    top: 100%;
+    left: 50%;
+    margin-left: -60px;}}
+    </style>""", unsafe_allow_html=True)
+
+st.markdown(f"""<style>
+    .tooltip {{
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+    }}
+    .tooltip .tooltiptext {{
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+    top: 100%;
+    left: 50%;
+    margin-left: -60px;
+    }}
+
+    .tooltip:hover .tooltiptext {{
+    visibility: visible;
+    }}
+    </style>""", unsafe_allow_html=True)
+
+logo1, _, logo2 = st.beta_columns([0.2,0.6,0.2])
+with logo1:
+    rsi = Image.open("RSI.jpg")
+    st.image(rsi)
+with logo2:
+    gri = Image.open("GRI.png")
+    st.image(gri)
+
+st.markdown("<h1 style='text-align: center;font-size: 40px'>Canadians’ Preparation for Retirement (CPR)</h1>", unsafe_allow_html=True)
+st.text("")
+st.text("")
+col1, col2, col3 = st.beta_columns(3)
+with col1:
+    with st.beta_expander("Use of the tool"):
+        st.markdown("Welcome to the individual online interface of [the CPR simulator, a freely available Python package](https://ire.hec.ca/en/canadians-preparation-retirement-cpr) also available for download for batch use. This tool is intended for use by individuals born in 1957 or later and not yet retired. To use the tool, fill in the fields and hit “Show figures” at the bottom of the page. *Your data is anonymous, only used for calculations, and is never stored; further, its transmission is encrypted.*")
+with col2:
+    with st.beta_expander("Functioning of the tool"):
+        st.markdown("""The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div> projects a household’s financial situation into the future using [a number of processes and hypotheses](https://cpr-pdf.herokuapp.com/) to a pre-specified age of retirement for each individual. At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for consumption – after debt payments, saving, taxes, and housing for homeowners – *just prior to and just after retirement, in 2020 (real) dollars.* It returns, in the form of figures, the pre- and post-retirement financial situation, as well as a decomposition of income in retirement.""", unsafe_allow_html=True)
+with col3:
+    with st.beta_expander("Public Retirement Benefits"):
+        st.markdown("""For the simulations, the claim age for <div class="tooltip">CPP<span class="tooltiptext">Canadian Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> retirement benefits is set at the specified retirement age (or 60 years old if retirement age is earlier; or 70 years old if retirement age is later). <div class="tooltip">OAS<span class="tooltiptext">Old Age Security Pension</span></div>/<div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div> and Allowance benefits begin at 65 years old.""", unsafe_allow_html=True)
 
 st.sidebar.markdown("# DISCLAIMER")
-st.sidebar.markdown("This tool uses the freely available [Canadians’ Preparation for Retirement (CPR) calculator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), \
+st.sidebar.markdown("This tool uses the freely available [Canadians' Preparation for Retirement (CPR) calculator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), \
     developed by a team at [HEC Montréal](https://www.hec.ca/en/)’s Retirement and Savings Institute with financial support from the \
     [Global Risk Institute](https://globalriskinstitute.org/)’s [National Pension Hub](https://globalriskinstitute.org/national-pension-hub/).")
 st.sidebar.markdown("It is provided “as is” for personal use only, without any warranty regarding its accuracy, appropriateness, completeness or any other quality.")
 st.sidebar.markdown("Its results are deemed to be general information on retirement preparation and should not be construed as financial advice; qualified financial advice should be sought before making any financial decision based on this tool.")
 st.sidebar.markdown("Use of the tool implies the acceptance of the foregoing terms and constitutes an acknowledgement that this disclaimer has been read and understood.")
+
+with st.beta_container():
+    st.text("")
+    st.text("")
 
 col_p1, _, col_p2 = st.beta_columns([0.465, 0.025, 0.51])
 
@@ -602,9 +679,13 @@ with col_p1:
     df[fin_acc_cols] = df[fin_acc_cols].fillna(0)
 
 with col_p2:
-    if st.button("Update figures", False):
+    if st.button("Update figures", False, help="Click here to update the simulations results"):
         show_plot_button(df)
+        st.markdown("# Simulations Results")
 
-if st.button("Show figures", False):
+if st.button("Show figures", False, help="Click here to see the simluations results"):
     with col_p2:
         show_plot_button(df)
+        st.text("")
+        st.text("")
+        st.markdown("# Simulations Results")
