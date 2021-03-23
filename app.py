@@ -12,10 +12,10 @@ import plotly.graph_objects as go
 from PIL import Image
 try:
     import locale
-    locale.setlocale(locale.LC_ALL, 'en_US.utf8')
+    locale.setlocale(locale.LC_ALL, 'en_CA.utf8')
 except Exception:
     try:
-        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+        locale.setlocale(locale.LC_ALL, 'en_CA.UTF-8')
     except Exception as e:
         st.write('An error occurred: {0}'.format(e))
 
