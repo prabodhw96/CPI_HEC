@@ -10,14 +10,6 @@ from CPR import main
 import streamlit as st
 import plotly.graph_objects as go
 from PIL import Image
-try:
-    import locale
-    locale.setlocale(locale.LC_ALL, 'en_CA.utf8')
-except Exception:
-    try:
-        locale.setlocale(locale.LC_ALL, 'en_CA.UTF-8')
-    except Exception as e:
-        st.write('An error occurred: {0}'.format(e))
 
 # DEFINE FUNCTIONS
 
@@ -59,7 +51,7 @@ def ask_hh():
 def info_spouse(which='first', step_amount=100):
     d = {}
     d['byear'] = st.number_input("Birth year", min_value=1957, max_value=2020,
-                                 key="byear_"+which, value=1980)
+                                 key="byear_"+which, value=1980, help="Enter your birth year")
     if d['byear'] < 1957:
         st.error("Sorry, the simulator only works for people born after 1956")
         st.stop()
@@ -345,10 +337,8 @@ def financial_products(account, balance, which, d_accounts_inv, step_amount=100)
         total_fp += d_fp[account+"_"+i]
 
     if total_fp != balance:
-        st.error(
-            "Total amount in financial products ({} $) must equal the total amount in this type of account ({} $)".format(
-                locale.format_string("%d", total_fp, grouping=True),
-                locale.format_string("%d", balance, grouping=True)))
+        st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(
+            format(total_fp, ",d"), format(balance, ",d")))
         st.stop()
     return d_fp
 
@@ -599,14 +589,6 @@ st.markdown(f"""<style>
     }}</style>""", unsafe_allow_html=True)
 
 st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
-
-st.markdown(f"""<style>
-    .tooltip .tooltiptext {{
-    width: 120px;
-    top: 100%;
-    left: 50%;
-    margin-left: -60px;}}
-    </style>""", unsafe_allow_html=True)
 
 st.markdown(f"""<style>
     .tooltip {{
