@@ -51,7 +51,7 @@ def ask_hh():
 def info_spouse(which='first', step_amount=100):
     d = {}
     d['byear'] = st.number_input("Birth year", min_value=1957, max_value=2020,
-                                 key="byear_"+which, value=1980)
+                                 key="byear_"+which, value=1980, help="Enter your birth year")
     if d['byear'] < 1957:
         st.error("Sorry, the simulator only works for people born after 1956")
         st.stop()
