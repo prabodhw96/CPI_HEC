@@ -439,7 +439,7 @@ def show_plot_button(df):
                     legend={'traceorder':'reversed'})
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
-        st.write("This figure shows 25 “realizations” of consumption possibilities just before and just after retirement, depending on how the various stochastic processes in the simulator turn out (e.g., for future earnings or investment returns). The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.")
+        st.write("This figure shows 25 “realizations” of consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later). Variations in consumption are driven by the stochastic processes for earnings and investment returns. The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.")
     
     ## to add text: st.write('whatever i want TBC')
 
@@ -505,8 +505,7 @@ def show_plot_button(df):
     st.text("")
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
-        st.write("This figure shows the main “realization” of consumption possibilities just before and just after retirement, with the variousstochastic processes turned off (in this case there is no possible variation, as in figure #1; everything is projected deterministically, with fixed processes). The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.")
-        st.write("The other 4 points shown in the figure illustrate the effect of alternative actions for you: A) retirement 2 years later than you indicated; B) retiring 2 years earlier then you indicated; C) contributing to an RSSP 5% more of your earnings than you indicated; D) contributing to an RSSP 10% more of your earnings than you indicated.")
+        st.write("This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later) for the average “realization” of the stochastic processes for earnings and investment returns (deterministic case). The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature. The other 4 points shown in the figure illustrate the effect of alternative actions for you: A) retirement 2 years later than you indicated; B) retiring 2 years earlier then you indicated; C) contributing to an RSSP 5% more of your earnings than you indicated; D) contributing to an RSSP 10% more of your earnings than you indicated.")
 
     
     # Income decomposition
@@ -574,7 +573,7 @@ def show_plot_button(df):
     st.text("")
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
-        st.write("This figure shows the decomposition of your household’s income in retirement: on the left are the various income sources, including the annuity purchased upon retirement with all your financial wealth; and on the right are the uses of that income. Forhomeowners who choose to sell their home at retirement, this includes a “rent equivalent”, to account for the fact that no rent had to be paid prior to retirement and make consumption possibilities comparable. In certain cases, “Net tax liability” will appear as an income source because it is negative – i.e., the household has more credits and deductions than it has taxes to pay.")
+        st.write("This figure shows the decomposition of your household’s income in retirement: on the left are the various income sources, including the annuity purchased upon retirement with all your financial wealth; and on the right are the uses of that income. For homeowners who choose to sell their home at retirement, this includes a “rent equivalent”, to account for the fact that no rent had to be paid prior to retirement and make consumption possibilities comparable. In certain cases, “Net tax liability” will appear as an income source because it is negative – i.e., the household has more credits and deductions than it has taxes to pay.")
     
     
 # SCRIPT INTERFACE
@@ -656,8 +655,8 @@ with col2:
     with st.beta_expander("Functioning of the tool"):
         st.markdown("""The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div> projects a household’s financial situation into the future using [a number of processes and hypotheses](https://cpr-pdf.herokuapp.com/) to a pre-specified age of retirement for each individual. At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for consumption – after debt payments, saving, taxes, and housing for homeowners – *just prior to and just after retirement, in 2020 (real) dollars.* It returns, in the form of figures, the pre- and post-retirement financial situation, as well as a decomposition of income in retirement.""", unsafe_allow_html=True)
 with col3:
-    with st.beta_expander("Public Retirement Benefits"):
-        st.markdown("""For the simulations, the claim age for <div class="tooltip">CPP<span class="tooltiptext">Canadian Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> retirement benefits is set at the specified retirement age (or 60 years old if retirement age is earlier; or 70 years old if retirement age is later). <div class="tooltip">OAS<span class="tooltiptext">Old Age Security Pension</span></div>/<div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div> and Allowance benefits begin at 65 years old.""", unsafe_allow_html=True)
+    with st.beta_expander("Public retirement benefits"):
+        st.markdown("""For the simulations, the claim age for <div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> retirement benefits is set at the specified retirement age (or 60 years old if retirement age is earlier; or 70 years old if retirement age is later). <div class="tooltip">OAS<span class="tooltiptext">Old Age Security</span></div>/<div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div> and Allowance benefits begin at 65 years old.""", unsafe_allow_html=True)
 
 st.sidebar.markdown("# DISCLAIMER")
 st.sidebar.markdown("This tool uses the freely available [Canadians' Preparation for Retirement (CPR) calculator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), \
