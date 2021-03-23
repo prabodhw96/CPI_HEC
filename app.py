@@ -59,10 +59,11 @@ def info_spouse(which='first', step_amount=100):
     d['sex'] = st.radio("Gender", options=list(d_gender.keys()),
                         format_func=lambda x: d_gender[x], key="sex_"+which, index=1)
     age = 2021 - d['byear']
-    d['ret_age'] = st.number_input("Retirement age", min_value=age+1,
+    d['ret_age'] = st.number_input("Intended retirement age", min_value=age+1,
                                    key="ret_age_"+which, value=max(age + 1, 65))
     d['claim_age_cpp'] = min(d['ret_age'], 70)
-    st.success("claim age cpp: {} ({})&nbsp;&nbsp;&nbsp;&nbsp; claim age OAS: 65".format(d["claim_age_cpp"], message_cpp(d["ret_age"])))
+    st.success("CPP/QPP claim age is set at the retirement age you entered above, but no less than 60 y.o. and no more than 70 y.o. &nbsp; OAS claim age is set at 65 y.o. ")
+    
     d_education = {'No certificate, diploma or degree': 'less than high school',
                    'Secondary (high) school diploma or equivalency certificate': 'high school',
                    'Trade certificate or diploma': 'post-secondary',
@@ -156,14 +157,6 @@ def info_hh(prod_dict, step_amount=100):
     if mortgage == "Yes":
         d_others.update(debts())
     return d_others
-
-def message_cpp(ret_age):
-    message = 'Equal to retirement age'
-    if ret_age > 70:
-        message += ', but at most 70'
-    elif ret_age < 60:
-        message += ', but at least 60'
-    return message
 
 def debts(step_amount=100):
     debt_dict = {'Credit card debt':'credit_card',
@@ -275,32 +268,35 @@ def fin_accounts(which, step_amount=100):
     d_fin = {}
     d_fin["bal_unreg"] = 0 #default
     st.markdown("### Savings account")
-    saving_plan_select = st.multiselect(label="Select your savings accounts", 
-                                        options=["RRSP", "TFSA", "Other Reg", "Unreg"], key="fin_acc_"+which) #addition
-    accs = saving_plan_select #addition
-    #accs = ["rrsp", "tfsa", "other_reg", "unreg"]
-    acc_cap = {"rrsp": "RRSP", "tfsa": "TFSA", "other_reg": "Other Reg", "unreg": "Unreg"}
-    acc_cap_rev = {v: k for k, v in acc_cap.items()} #addition
-    accs = [acc_cap_rev[i] for i in accs] #addition
-    for i in accs:
-        st.markdown("### {}".format(acc_cap[i]))
+    d_accounts = {'RRSP': "Registered Retirement Savings Plans (RRSPs)",
+                  'TFSA': "Tax-Free Savings Accounts (TFSAs)",
+                  'other registered': "Other registered accounts",
+                  'unregistered': "Unregistered accounts"}
+    d_accounts_inv = {v: k for k, v in d_accounts.items()}
+    saving_plan_select = st.multiselect(
+        label="Select your savings accounts", options= [v for v in d_accounts.values()],
+        key="fin_acc_"+which)
+    
+    for i in saving_plan_select:
+        st.markdown("### {}".format(i))
         d_fin["bal_"+i] = st.number_input(
-            "Amount in {} account  ($)".format(acc_cap[i]), value=0, min_value=0, step=step_amount,
+            "Amount in {} accounts ($)".format(d_accounts_inv[i]), value=0, min_value=0, step=step_amount,
             key="bal_"+i+"_"+which)
         d_fin["cont_rate_"+i] = st.number_input(
-            "Fraction of your earnings you plan to save in your {} account (in %)".format(
-                acc_cap[i]), value=0, min_value=0, max_value=100, step=1, key="cont_rate_"+i+"_"+which)
+            "Fraction of your earnings you plan to save in your {} accounts (in %)".format(
+                d_accounts_inv[i]), value=0, min_value=0, max_value=100, step=1, key="cont_rate_"+i+"_"+which)
         d_fin["cont_rate_"+i] /= 100.0
         d_fin["withdrawal_"+i] = st.number_input(
-            "Amount of your {} account you plan to spend ($)".format(acc_cap[i]),
+            "Amount of your {} accounts you plan to spend ($)".format(d_accounts_inv[i]),
             value=0, min_value=0, step=step_amount, key="withdrawal_"+i+"_"+which)
         if i in ["rrsp", "tfsa"]:
             d_fin["init_room_"+i] = st.number_input(
-                "Contribution room for {} at the beginning of 2020 ".format(acc_cap[i]),
+                "Contribution room for {} at the beginning of 2020 ".format(d_accounts_inv[i]),
                 value=0, min_value=0, step=step_amount, key="init_room_"+i+"_"+which)
 
         if d_fin["bal_"+i] > 0:
-            d_fin.update(financial_products(i, d_fin["bal_"+i], which, step_amount=step_amount))
+            d_fin.update(financial_products(i, d_fin["bal_"+i], which, d_accounts_inv,
+                                            step_amount=step_amount))
 
     if d_fin["bal_unreg"] > 0:
         st.markdown("### Gains and losses in unregistered Account")
@@ -312,11 +308,10 @@ def fin_accounts(which, step_amount=100):
             value=0, min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
     return d_fin
 
-def financial_products(account, balance, which, step_amount=100):
+def financial_products(account, balance, which, d_accounts_inv, step_amount=100):
     d_fp = {}
     total_fp = 0
-    acc_cap = {"rrsp": "RRSP", "tfsa": "TFSA", "other_reg": "Other Reg", "unreg": "Unreg"}
-    st.markdown("### {} - Financial products".format(acc_cap[account]))
+    st.markdown("### {} - Financial products".format(d_accounts_inv[account]))
     fin_prods = ["crsa", "hipsa", "mf", "stocks", "bonds", "gic", "cvplp", "isf", "etf"]
     fin_prods_dict = {"crsa": "Amount in checking or regular savings account",
                       "hipsa": "Amount in high interest/premium savings account",
@@ -440,8 +435,8 @@ def show_plot_button(df):
     df_change = results.df_merged
     
     # graph changes in contribution rate rrsp and retirement age
-    names = ['Initial case', 'RRSP contrib + 5%', 'RRSP contrib + 10%',
-            'Retirement age - 2', 'Retirement age + 2']
+    names = ['Main scenario', 'RRSP contrib +5%', 'RRSP contrib +10%',
+             'Retirement age -2 years', 'Retirement age +2 years']
     init_cons_bef, init_cons_after = df_change.loc[0, ['cons_bef', 'cons_after']].values.squeeze().tolist()
 
     fig = go.Figure()
@@ -543,9 +538,13 @@ def show_plot_button(df):
     data = go.Sankey(link=link, node=node)
     # plot
     fig = go.Figure(data)
-    fig.update_layout(height=450, width=750,
-                    title_text="Retirement income decomposition",
-                    font_size=16)
+    fig.update_layout(
+        height=500, width=700,
+        title={'text': f"Household consumption before and after retirement <br> under alternative scenarios ($)",
+               'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
+        xaxis_title="Before retirement", xaxis_tickformat=",",
+        yaxis_title="After retirement", yaxis_tickformat=",",
+        font=dict(family="Courier New, monospace", size=14, color="RebeccaPurple"))
     st.plotly_chart(fig)
     
     
