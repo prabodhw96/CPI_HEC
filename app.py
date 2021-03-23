@@ -10,14 +10,6 @@ from CPR import main
 import streamlit as st
 import plotly.graph_objects as go
 from PIL import Image
-try:
-    import locale
-    locale.setlocale(locale.LC_ALL, 'en_CA.utf8')
-except Exception:
-    try:
-        locale.setlocale(locale.LC_ALL, 'en_CA.UTF-8')
-    except Exception as e:
-        st.write('An error occurred: {0}'.format(e))
 
 # DEFINE FUNCTIONS
 
@@ -342,7 +334,9 @@ def financial_products(account, balance, which, d_accounts_inv, step_amount=100)
 
     if total_fp != balance:
         st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(
-                locale.format_string("%d", total_fp, grouping=True), locale.format_string("%d", balance, grouping=True)))
+            format(total_fp, ",d"), format(balance, ",d")))
+        #st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(
+        #        locale.format_string("%d", total_fp, grouping=True), locale.format_string("%d", balance, grouping=True)))
         st.stop()
     return d_fp
 
