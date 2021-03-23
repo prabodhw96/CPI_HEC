@@ -4,6 +4,6 @@ matplotlib
 seaborn
 plotly
 numba
-streamlit==0.76
+streamlit==0.79
 cpr-rsi
 openpyxl
