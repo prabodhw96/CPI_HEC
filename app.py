@@ -280,18 +280,18 @@ def fin_accounts(which, step_amount=100):
     for i in saving_plan_select:
         st.markdown("### {}".format(i))
         d_fin["bal_"+i] = st.number_input(
-            "Amount in {} accounts ($)".format(d_accounts_inv[i]), value=0, min_value=0, step=step_amount,
+            "Balance of your {} accounts at the beginning of 2020 (in $)".format(d_accounts_inv[i]), value=0, min_value=0, step=step_amount,
             key="bal_"+i+"_"+which)
         d_fin["cont_rate_"+i] = st.number_input(
-            "Fraction of your earnings you plan to save in your {} accounts (in %)".format(
+            "Fraction of your earnings you plan to save annually in your {} accounts (in %)".format(
                 d_accounts_inv[i]), value=0, min_value=0, max_value=100, step=1, key="cont_rate_"+i+"_"+which)
         d_fin["cont_rate_"+i] /= 100.0
         d_fin["withdrawal_"+i] = st.number_input(
-            "Amount of your {} accounts you plan to spend ($)".format(d_accounts_inv[i]),
+            "Amount you plan ot withdraw annually from your {} accounts prior to retirement (in $)".format(d_accounts_inv[i]),
             value=0, min_value=0, step=step_amount, key="withdrawal_"+i+"_"+which)
         if i in ["rrsp", "tfsa"]:
             d_fin["init_room_"+i] = st.number_input(
-                "Contribution room for {} at the beginning of 2020 ".format(d_accounts_inv[i]),
+                "{} contribution room at the beginning of 2020".format(d_accounts_inv[i]),
                 value=0, min_value=0, step=step_amount, key="init_room_"+i+"_"+which)
 
         if d_fin["bal_"+i] > 0:
