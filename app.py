@@ -9,17 +9,19 @@ import math
 from CPR import main
 import streamlit as st
 import plotly.graph_objects as go
+import locale
+locale.setlocale(locale.LC_ALL, 'en_CA')
 
 # DEFINE FUNCTIONS
 
 def ask_hh():
     st.markdown("# Respondent")
     d_hh = info_spouse()
-    st.markdown("## Do you have a spouse?")
-    spouse_ques = st.radio("Select", ["Yes", "No"], index=1)
+    st.markdown("# Spouse")
+    # st.markdown("Do you have a spouse?")
+    spouse_ques = st.radio("Do you have a spouse?", ["Yes", "No"], index=1)
     d_hh['couple'] =  (spouse_ques == "Yes")
     if d_hh['couple']:
-        st.markdown("# Spouse")
         d_hh.update(info_spouse('second'))
 
     fin_accs = ["rrsp", "tfsa", "other_reg", "unreg"]
@@ -73,12 +75,12 @@ def info_spouse(which='first', step_amount=100):
                    'University certificate or diploma above bachelor level': 'university'}
     degree = st.selectbox("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
     d['education'] = d_education[degree]
-    d['init_wage'] = st.number_input("Annual earnings for 2020 ($)", min_value=0,
+    d['init_wage'] = st.number_input("Annual earnings for 2020 (in $)", min_value=0,
                                      step=step_amount, key="init_wage_"+which, value=50000)
 
     pension = st.radio("Did you receive a pension in 2020?", ["Yes", "No"], key="pension_radio_"+which, index=1)
     if pension == "Yes":
-        d['pension'] = st.number_input("Yearly amount of pension ($)",  min_value=0, step=step_amount, key="pension_"+which, value=0)   
+        d['pension'] = st.number_input("Yearly amount of pension (in $)",  min_value=0, step=step_amount, key="pension_"+which, value=0)   
 
     savings_plan = st.radio("Do you have any savings or plan to save in the future?", ["Yes", "No"], 
                             key="savings_plan_"+which, index=1)
@@ -88,32 +90,35 @@ def info_spouse(which='first', step_amount=100):
         d_fin_details =  {key: 0 for key in ['cap_gains_unreg', 'realized_losses_unreg', 'init_room_rrsp', 'init_room_tfsa']}
         d.update(d_fin_details)
 
-    db_pension = st.radio("Will you receive a DB pension from your current or previous employer", ["Yes", "No"], 
+    db_pension = st.radio("Will you receive a defined-benefit (DB) pension from your current or a previous employer", ["Yes", "No"], 
                             key="db_pension_"+which, index=1)
     if db_pension == "Yes":
         st.markdown("### DB Pension")
-        d['replacement_rate_db'] = st.slider(
-            "Replacement rate of current DB (in %)", min_value=0.0, max_value=70.0,
-            step=0.5, key="replacement_rate_db_" + which, value=0.0) / 100
-        d['rate_employee_db'] = st.slider(
-            "Contribution rate employee of current DB (in %)", min_value=0.0,
-            max_value=9.0, step=0.5, key="rate_employee_db_"+which, value=5.0) / 100
         d['income_previous_db'] = st.number_input(
-            "Amount of DB pension from previous employer ($)", min_value=0,
-            step=step_amount, key="income_previous_db_" + which)
+            "Yearly amount of DB pension from previous employer (in $), once in retirement",
+            min_value=0, step=step_amount, key="income_previous_db_" + which)
+        d['rate_employee_db'] = st.slider(
+            "Employee contribution rate of current DB (in % of earnings)", min_value=0.0,
+            max_value=9.0, step=1., key="rate_employee_db_"+which, value=5.0) / 100
+        d['replacement_rate_db'] = st.slider(
+            "Replacement rate of current DB employer plan (in % of earnings), once in retirement",
+            min_value=0.0, max_value=70.0, step=1., key="replacement_rate_db_" + which, value=0.0) / 100
+        
 
-    dc_pension = st.radio("Do you have a DC pension from current or previous employer",
-                          ["Yes", "No"], key="dc_pension_"+which, index=1)
+    dc_pension = st.radio(
+        "Do you have a defined-contribution (DC) or similar pension plan from your current or a previous employer?",
+        ["Yes", "No"], key="dc_pension_"+which, index=1)
     if dc_pension == "Yes":
-        st.markdown("### DC Pension")
-        d['init_dc'] = st.number_input("Current balance ($)", min_value=0,
-                                       step=step_amount, value=0, key="init_dc_" + which)
+        st.markdown("### DC employer plan")
+        d['init_dc'] = st.number_input(
+            "Total balance at the end of 2019 (in $)", min_value=0,
+            step=step_amount, value=0, key="init_dc_" + which)
         d['rate_employee_dc'] = st.slider(
-            "Contribution rate employee of current DC (in %)", min_value=0.0,
-            max_value=30.0, step=0.5, key="rate_employee_dc_"+which, value=5.0) / 100
+            "Employee contribution rate of current DC employer plan (in % of earnings)",
+            min_value=0.0, max_value=30.0, step=0.5, key="rate_employee_dc_"+which, value=5.0) / 100
         d['rate_employer_dc'] = st.slider(
-            "Contribution rate  employer of current DC (in %)", min_value=0.0,
-            max_value=30.0, step=0.5, key="rate_employer_dc_"+which, value=5.0) / 100
+            "Employer contribution rate of current DC (in % of earnings)",
+            min_value=0.0, max_value=30.0, step=0.5, key="rate_employer_dc_"+which, value=5.0) / 100
         if d['rate_employee_dc'] + d['rate_employer_dc'] > 0.18:
             st.warning("**Warning:** Tax legislation caps the combined employee-employer contribution rate at 18% of earnings")
         
@@ -140,7 +145,7 @@ def info_hh(prod_dict, step_amount=100):
     business = st.radio("Do you own a business?", ["Yes", "No"], key="business", index=1)
     if business == "Yes":
         d_others['business'] = st.number_input(
-            "Value of the business at the beginning of 2020 ($)", min_value=0,
+            "Value of the business at the end of 2019 (in $)", min_value=0,
             step=step_amount, key="business_value")
         
         sell_business = st.radio("Do you plan to sell your business upon retirement?",
@@ -148,7 +153,7 @@ def info_hh(prod_dict, step_amount=100):
         if sell_business == 'Yes':
             user_options['sell_business'] = True
             d_others['price_business'] = st.number_input(
-                "Buying price of the business ($)", min_value=0, step=step_amount,
+                "Buying price of the business (in $)", min_value=0, step=step_amount,
                 key="business_price")
 
     st.markdown("### Debts other than mortgage")
@@ -175,10 +180,10 @@ def debts(step_amount=100):
         debt = debt_dict[i]
         st.markdown("### {}".format(i))
         d_debts[debt] = st.number_input(
-        "Outstanding balance at the beginning of 2020 ($)", min_value=0,
+        "Outstanding balance at the end of 2019 (in $)", min_value=0,
         step=step_amount, key="debt_"+debt_dict[i])
         d_debts[debt + "_payment"] = st.number_input(
-            "Monthly payment ($)", min_value=0, step=step_amount,
+            "Monthly payment (in $)", min_value=0, step=step_amount,
             key="debt_payment_"+debt_dict[i])
         
     for key in l_debts: #addition
@@ -196,7 +201,7 @@ def info_residence(which, step_amount=1000):
     if sell == "Yes":
         user_options[f'sell_{which}_resid'] = True
         d_res[f'{which}_residence'] = st.number_input(
-            "Value at the beginning of 2020 ($)", in_value=0,
+            "Value at the end of 2019 (in $)", in_value=0,
             step=step_amount, key="res_value_"+which)
     else:
         d_res[f'{which}_residence'] = 0
@@ -213,15 +218,15 @@ def info_residence(which, step_amount=1000):
     else:
         if sell == "Yes":
             d_res[f'price_{which}_residence'] = st.number_input(
-                "Buying price ($)", min_value=0, step=step_amount, key="res_buy_"+which)
+                "Buying price (in $)", min_value=0, step=step_amount, key="res_buy_"+which)
         else:
             d_res[f'price_{which}_residence'] = 0
 
     d_res[f'{which}_mortgage'] = st.number_input(
-        "Outstanding mortgage at the beginning of 2020 ($)", min_value=0, step=step_amount,
+        "Outstanding mortgage at the end of 2019 (in $)", min_value=0, step=step_amount,
         key="res_mortgage_"+which)
     d_res[f'{which}_mortgage_payment'] = st.number_input(
-        "Monthly payment on mortgage in 2020 ($)", min_value=0, step=step_amount,
+        "Monthly payment on mortgage in 2020 (in $)", min_value=0, step=step_amount,
         key="res_mortgage_payment_"+which)
     return d_res
 
@@ -280,7 +285,7 @@ def fin_accounts(which, step_amount=100):
     for i in saving_plan_select:
         st.markdown("### {}".format(i))
         d_fin["bal_"+i] = st.number_input(
-            "Balance of your {} accounts at the beginning of 2020 (in $)".format(d_accounts_inv[i]), value=0, min_value=0, step=step_amount,
+            "Balance of your {} accounts at the end of 2019 (in $)".format(d_accounts_inv[i]), value=0, min_value=0, step=step_amount,
             key="bal_"+i+"_"+which)
         d_fin["cont_rate_"+i] = st.number_input(
             "Fraction of your earnings you plan to save annually in your {} accounts (in %)".format(
@@ -291,7 +296,7 @@ def fin_accounts(which, step_amount=100):
             value=0, min_value=0, step=step_amount, key="withdrawal_"+i+"_"+which)
         if i in ["rrsp", "tfsa"]:
             d_fin["init_room_"+i] = st.number_input(
-                "{} contribution room at the beginning of 2020".format(d_accounts_inv[i]),
+                "{} contribution room at the end of 2019".format(d_accounts_inv[i]),
                 value=0, min_value=0, step=step_amount, key="init_room_"+i+"_"+which)
 
         if d_fin["bal_"+i] > 0:
@@ -301,10 +306,10 @@ def fin_accounts(which, step_amount=100):
     if d_fin["bal_unreg"] > 0:
         st.markdown("### Gains and losses in unregistered Account")
         d_fin['cap_gains_unreg'] = st.number_input(
-            "Balance of unrealized capital gains as of January 1, 2020 ($)",
+            "Balance of unrealized capital gains as of January 1, 2020 (in $)",
             value=0, min_value=0, step=step_amount, key="cap_gains_unreg_"+which)
         d_fin['realized_losses_unreg'] = st.number_input(
-            "Realized losses in capital on unregistered account as of January 1, 2020 ($)",
+            "Realized losses in capital on unregistered account as of January 1, 2020 (in $)",
             value=0, min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
     return d_fin
 
@@ -333,8 +338,10 @@ def financial_products(account, balance, which, d_accounts_inv, step_amount=100)
         total_fp += d_fp[account+"_"+i]
 
     if total_fp != balance:
-        st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(
-                total_fp, balance))
+        st.error(
+            "Total amount in financial products ({} $) must equal the total amount in this type of account ({} $)".format(
+                locale.format_string("%d", total_fp, grouping=True),
+                locale.format_string("%d", balance, grouping=True)))
         st.stop()
     return d_fp
 
@@ -414,7 +421,7 @@ def show_plot_button(df):
                             mode='lines', name="Replacement rate = 80%",
                             line=dict(color="Green", width=2, dash='dot')))
     fig.update_layout(height=500, width=700,
-                    title={'text': f"Household consumption before and after retirement ($) <br>({nsim} realizations)",
+                    title={'text': f"Household consumption before and after retirement (in $) <br>({nsim} realizations)",
                             'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
                     xaxis_title="Before retirement",
                     xaxis_tickformat=",",
@@ -472,7 +479,7 @@ def show_plot_button(df):
 
 
     fig.update_layout(height=500, width=700,
-                    title={'text': f"Household consumption before and after retirement <br> under alternative scenarios ($)",
+                    title={'text': f"Household consumption before and after retirement <br> under alternative scenarios (in $)",
                             'x': 0.5,
                             'xanchor': 'center',
                             'yanchor': 'top'},
@@ -540,7 +547,7 @@ def show_plot_button(df):
     fig = go.Figure(data)
     fig.update_layout(
         height=500, width=700,
-        title={'text': f"Household consumption before and after retirement <br> under alternative scenarios ($)",
+        title={'text': f"Household consumption before and after retirement <br> under alternative scenarios (in $)",
                'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
         xaxis_title="Before retirement", xaxis_tickformat=",",
         yaxis_title="After retirement", yaxis_tickformat=",",
