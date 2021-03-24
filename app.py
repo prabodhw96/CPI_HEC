@@ -678,8 +678,8 @@ with col_p2:
         show_plot_button(df)
         st.text("")
         st.text("")
-        st.markdown("# Financial assumptions")
-        st.write("to be available soon")
+        # st.markdown("# Financial assumptions")
+        # st.write("to be available soon")
 
 if st.button("Show figures", False, help="Click here to see the simulations results"):
     with col_p2:
@@ -687,5 +687,5 @@ if st.button("Show figures", False, help="Click here to see the simulations resu
         show_plot_button(df)
         st.text("")
         st.text("")
-        st.markdown("# Financial assumptions")
-        st.write("to be available soon")
+        # st.markdown("# Financial assumptions")
+        # st.write("to be available soon")
