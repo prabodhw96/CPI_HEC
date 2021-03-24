@@ -711,7 +711,7 @@ with col_p2:
         show_plot_button(df)
         st.text("")
         st.text("")
-        mean_returns = change_mean_returns(mean_returns)
+        # mean_returns = change_mean_returns(mean_returns)
 
 if st.button("Show figures", False, help="Click here to see the simulation results"):
     with col_p2:
@@ -719,4 +719,4 @@ if st.button("Show figures", False, help="Click here to see the simulation resul
         show_plot_button(df)
         st.text("")
         st.text("")
-        mean_returns = change_mean_returns(mean_returns)
+        # mean_returns = change_mean_returns(mean_returns)
