@@ -382,7 +382,7 @@ def show_plot_button(df):
     # stochastic results
     nsim = 25
     results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False,
-                                   base_year=2020, **user_options, **returns)
+                                   base_year=2020, **user_options, **returns, **mean_returns)
     
     df_output = results.output
     check_cons_positive(df_output, cons_floor = 0)
@@ -440,7 +440,7 @@ def show_plot_button(df):
     # create data with changes in contribution rate rrsp and retirement age
     df_change = create_data_changes(df)
     results = main.run_simulations(df_change, nsim=1, n_jobs=1,non_stochastic=True,
-                                   base_year=2020, **user_options, **returns)
+                                   base_year=2020, **user_options, **returns, **mean_returns)
     results.merge()
     df_change = results.df_merged
     
@@ -598,6 +598,24 @@ returns = {'ret_equity_2018': 0.0313,
            'price_rent_2018': 20,
            'ret_business_2018': 0.0313}
 
+# long-term returns
+mean_returns = {'mu_equity': 0.0688,
+                'mu_bills': 0.0103,
+                'mu_bonds': 0.0253,
+                'mu_housing': 0.0161,
+                'mu_business': 0.0688,
+                'mu_price_rent': 15}
+
+def change_mean_returns(mean_returns):
+    st.markdown("# Financial assumptions")
+    st.write("You can change historical long-term returns used in simulation:")
+    adjusted_mean_returns = {}
+    for key, val in mean_returns.items():
+        adjusted_mean_returns[key] = st.slider(
+            f'Long-term mean real return on {key[3:]}', min_value=0.0, max_value=10.0,
+            step=1., key=f"long_term_returns_{key}", value=val) / 100
+    return adjusted_mean_returns
+
 st.markdown(f"""<style>
     .reportview-container .main .block-container{{
     max-width: 1280px;
@@ -688,19 +706,17 @@ with col_p1:
     df[fin_acc_cols] = df[fin_acc_cols].fillna(0)
 
 with col_p2:
-    if st.button("Update figures", False, help="Click here to update the simulations results"):
-        st.markdown("# Simulations Results")
+    if st.button("Update figures", False, help="Click here to update the simulation results"):
+        st.markdown("# Simulation results")
         show_plot_button(df)
         st.text("")
         st.text("")
-        # st.markdown("# Financial assumptions")
-        # st.write("to be available soon")
+        mean_returns = change_mean_returns(mean_returns)
 
-if st.button("Show figures", False, help="Click here to see the simulations results"):
+if st.button("Show figures", False, help="Click here to see the simulation results"):
     with col_p2:
-        st.markdown("# Simulations Results")
+        st.markdown("# Simulation results")
         show_plot_button(df)
         st.text("")
         st.text("")
-        # st.markdown("# Financial assumptions")
-        # st.write("to be available soon")
+        mean_returns = change_mean_returns(mean_returns)
