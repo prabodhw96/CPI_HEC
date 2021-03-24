@@ -613,7 +613,7 @@ def change_mean_returns(mean_returns):
     for key, val in mean_returns.items():
         adjusted_mean_returns[key] = st.slider(
             f'Long-term mean real return on {key[3:]}', min_value=0.0, max_value=10.0,
-            step=1., key=f"long_term_returns_{key}", value=val) / 100
+            step=1.0, key="long_term_returns_"+key[3:], value=float(val)) / 100.0
     return adjusted_mean_returns
 
 st.markdown(f"""<style>
@@ -669,7 +669,7 @@ with col1:
         st.markdown("Welcome to the individual online interface of [the CPR simulator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), [a freely available Python package](https://rsi-models.github.io/CPR/en/) also available for download for batch use. This tool is intended for use by individuals born in 1957 or later and not yet retired. To use the tool, fill in the fields and hit “Show figures” at the bottom of the page. *Your data is anonymous, only used for calculations, and is never stored; further, its transmission is encrypted.*")
 with col2:
     with st.beta_expander("Functioning of the tool"):
-        st.markdown("""The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div> projects a household’s financial situation into the future using [a number of processes and hypotheses](https://cpr-pdf.herokuapp.com/) to a pre-specified age of retirement for each individual. At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for consumption – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. It returns, in the form of figures, the pre- and post-retirement financial situation, as well as a decomposition of income in retirement.""", unsafe_allow_html=True)
+        st.markdown("""The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div> projects a household’s financial situation into the future using [a number of processes and hypotheses](https://ire.hec.ca/wp-content/uploads/2021/03/assumptions.pdf) to a pre-specified age of retirement for each individual. At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for consumption – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. It returns, in the form of figures, the pre- and post-retirement financial situation, as well as a decomposition of income in retirement.""", unsafe_allow_html=True)
 with col3:
     with st.beta_expander("Public retirement benefits"):
         st.markdown("""For the simulations, the claim age for <div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> retirement benefits is set at the specified retirement age (or 60 years old if retirement age is earlier; or 70 years old if retirement age is later). <div class="tooltip">OAS<span class="tooltiptext">Old Age Security</span></div>/<div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div> and Allowance benefits begin at 65 years old.""", unsafe_allow_html=True)
@@ -683,6 +683,11 @@ st.sidebar.markdown("Its results are deemed to be general information on retirem
 st.sidebar.markdown("Use of the tool implies the acceptance of the foregoing terms and constitutes an acknowledgement that this disclaimer has been read and understood.")
 
 with st.beta_container():
+    st.text("")
+    st.text("")
+    colt, _ = st.beta_columns([0.56, 0.44])
+    with colt:
+        st.success("**Change theme:** On top right corner, click on ☰ -> Settings -> Theme and select *Light/Dark*.")
     st.text("")
     st.text("")
 
@@ -711,12 +716,13 @@ with col_p2:
         show_plot_button(df)
         st.text("")
         st.text("")
-        # mean_returns = change_mean_returns(mean_returns)
+        mean_returns = change_mean_returns(mean_returns)
 
 if st.button("Show figures", False, help="Click here to see the simulation results"):
     with col_p2:
+        mean_returns = change_mean_returns(mean_returns)
         st.markdown("# Simulation results")
         show_plot_button(df)
         st.text("")
         st.text("")
-        # mean_returns = change_mean_returns(mean_returns)
+        mean_returns = change_mean_returns(mean_returns)
