@@ -500,7 +500,7 @@ def show_plot_button(df):
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
         st.markdown("""
-            * This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later), for the mean realization of the stochastic processes for earnings and investment returns (the deterministic case).
+            * This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later), for the main realization of the stochastic processes for earnings and investment returns (the deterministic case).
             * The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.
             * The other 4 points shown in the figure illustrate the effect of alternative actions for you:
                 * retiring 2 years later than you indicated;
@@ -563,7 +563,7 @@ def show_plot_button(df):
     fig = go.Figure(data)
     fig.update_layout(
         height=500, width=700,
-        title={'text': f"<b>Household consumption before and after retirement <br> under alternative scenarios (in 2020 $)</b>",
+        title={'text': f"<b>Household retirement income decomposition <br> (in 2020 $)</b>",
                'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
         xaxis_title="Before retirement", xaxis_tickformat=",",
         yaxis_title="After retirement", yaxis_tickformat=",",
@@ -651,7 +651,7 @@ with col1:
         st.markdown("Welcome to the individual online interface of [the CPR simulator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), [a freely available Python package](https://rsi-models.github.io/CPR/en/) also available for download for batch use. This tool is intended for use by individuals born in 1957 or later and not yet retired. To use the tool, fill in the fields and hit “Show figures” at the bottom of the page. *Your data is anonymous, only used for calculations, and is never stored; further, its transmission is encrypted.*")
 with col2:
     with st.beta_expander("Functioning of the tool"):
-        st.markdown("""The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div> projects a household’s financial situation into the future using [a number of processes and hypotheses](https://cpr-pdf.herokuapp.com/) to a pre-specified age of retirement for each individual. At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for consumption – after debt payments, saving, taxes, and housing for homeowners – *prior to and after retirement, in 2020 (real) dollars.* It returns, in the form of figures, the pre- and post-retirement financial situation, as well as a decomposition of income in retirement.""", unsafe_allow_html=True)
+        st.markdown("""The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div> projects a household’s financial situation into the future using [a number of processes and hypotheses](https://cpr-pdf.herokuapp.com/) to a pre-specified age of retirement for each individual. At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for consumption – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. It returns, in the form of figures, the pre- and post-retirement financial situation, as well as a decomposition of income in retirement.""", unsafe_allow_html=True)
 with col3:
     with st.beta_expander("Public retirement benefits"):
         st.markdown("""For the simulations, the claim age for <div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> retirement benefits is set at the specified retirement age (or 60 years old if retirement age is earlier; or 70 years old if retirement age is later). <div class="tooltip">OAS<span class="tooltiptext">Old Age Security</span></div>/<div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div> and Allowance benefits begin at 65 years old.""", unsafe_allow_html=True)
