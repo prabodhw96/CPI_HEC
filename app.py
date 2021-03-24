@@ -433,7 +433,7 @@ def show_plot_button(df):
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
         st.markdown("""
-            * This figure shows 25 “realizations” of consumption possibilities before retirement (at age 55 or the year before retirement, if earlier, but no sooner than 2021) and after (at age 65 or in the retirement year, if later).
+            * This figure shows 25 “realizations” of consumption possibilities before retirement (at age 55 or the year before retirement, if earlier, but no sooner than 2020) and after (at age 65 or in the retirement year, if later).
             * Variations in consumption are driven by the stochastic processes for earnings and investment returns.
             * The two dashed lines show where dots would lie for a “consumption replacement rate” of 80% and 65%, respectively, two thresholds used in the <div class=tooltip>RSI<span class=tooltiptext>Retirement and Savings Institute</span></div>’s June 2020 report as well as in previous research and policy literature.""", unsafe_allow_html=True)
 
@@ -500,7 +500,7 @@ def show_plot_button(df):
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
         st.markdown("""
-            * This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later), for the main realization of the stochastic processes for earnings and investment returns (the deterministic case).
+            * This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier, but no sooner than 2020) and after (at age 65 or in the retirement year, if later), for the main realization of the stochastic processes for earnings and investment returns (the deterministic case).
             * The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.
             * The other 4 points shown in the figure illustrate the effect of alternative actions for you:
                 * retiring 2 years later than you indicated;
