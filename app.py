@@ -64,7 +64,7 @@ def info_spouse(which='first', step_amount=100):
                                    key="ret_age_"+which, value=max(age + 1, 65))    
     
     d['claim_age_cpp'] = min(d['ret_age'], 70)
-    st.markdown("""<div class="tooltip">CPP<span class="tooltiptext">Canadian Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> claim age is set at the retirement age you entered above, but no less than 60 y.o. and no more than 70 y.o. &nbsp; OAS claim age is set at 65 y.o.""", unsafe_allow_html=True)
+    st.markdown("""<div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> claim age is set at the retirement age you entered above, but no less than 60 y.o. and no more than 70 y.o. &nbsp; OAS claim age is set at 65 y.o.""", unsafe_allow_html=True)
     st.text("")
     d_education = {'No certificate, diploma or degree': 'less than high school',
                    'Secondary (high) school diploma or equivalency certificate': 'high school',
@@ -421,7 +421,7 @@ def show_plot_button(df):
     if cons_bef[1] - cons_bef[0] < 10:
         fig.update_xaxes(range=[cons_bef[0] - 500, cons_bef[0] + 500])
     fig.update_layout(height=500, width=700,
-                    title={'text': f"Household consumption before and after retirement <br> (in 2020 $, {nsim} realizations)",
+                    title={'text': f"<b>Household consumption before and after retirement <br> (in 2020 $, {nsim} realizations)</b>",
                             'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
                     xaxis_title="Before retirement",
                     xaxis_tickformat=",",
@@ -432,7 +432,10 @@ def show_plot_button(df):
                     legend={'traceorder':'reversed'})
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
-        st.write("This figure shows 25 “realizations” of consumption possibilities before retirement (at age 55 or the year before retirement, if earlier, but no sooner than 2021) and after (at age 65 or in the retirement year, if later). Variations in consumption are driven by the stochastic processes for earnings and investment returns. The two dashed lines show where dots would lie for a “consumption replacement rate” of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.")
+        st.markdown("""
+            * This figure shows 25 “realizations” of consumption possibilities before retirement (at age 55 or the year before retirement, if earlier, but no sooner than 2021) and after (at age 65 or in the retirement year, if later).
+            * Variations in consumption are driven by the stochastic processes for earnings and investment returns.
+            * The two dashed lines show where dots would lie for a “consumption replacement rate” of 80% and 65%, respectively, two thresholds used in the <div class=tooltip>RSI<span class=tooltiptext>Retirement and Savings Institute</span></div>’s June 2020 report as well as in previous research and policy literature.""", unsafe_allow_html=True)
 
     # create data with changes in contribution rate rrsp and retirement age
     df_change = create_data_changes(df)
@@ -479,7 +482,7 @@ def show_plot_button(df):
 
 
     fig.update_layout(height=500, width=700,
-                    title={'text': f"Household consumption before and after retirement <br> under alternative scenarios (in 2020 $)",
+                    title={'text': f"<b>Household consumption before and after retirement <br> under alternative scenarios (in 2020 $)</b>",
                             'x': 0.5,
                             'xanchor': 'center',
                             'yanchor': 'top'},
@@ -496,7 +499,14 @@ def show_plot_button(df):
     st.text("")
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
-        st.write("This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later), for the mean realization of the stochastic processes for earnings and investment returns (the deterministic case). The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature. The other 4 points shown in the figure illustrate the effect of alternative actions for you: A) retiring 2 years later than you indicated; B) retiring 2 years earlier then you indicated; C) contributing to an RSSP 5% more of your earnings than you indicated; D) contributing to an RSSP 10% more of your earnings than you indicated.")
+        st.markdown("""
+            * This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later), for the mean realization of the stochastic processes for earnings and investment returns (the deterministic case).
+            * The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.
+            * The other 4 points shown in the figure illustrate the effect of alternative actions for you:
+                * retiring 2 years later than you indicated;
+                * retiring 2 years earlier then you indicated;
+                * contributing to an <div class="tooltip">RRSP<span class="tooltiptext">Registered Retirement Savings Plans</span></div> 5% more of your earnings than you indicated;
+                * contributing to an <div class="tooltip">RRSP<span class="tooltiptext">Registered Retirement Savings Plans</span></div> 10% more of your earnings than you indicated.""", unsafe_allow_html=True)
 
     
     # Income decomposition
@@ -553,7 +563,7 @@ def show_plot_button(df):
     fig = go.Figure(data)
     fig.update_layout(
         height=500, width=700,
-        title={'text': f"Household consumption before and after retirement <br> under alternative scenarios (in 2020 $)",
+        title={'text': f"<b>Household consumption before and after retirement <br> under alternative scenarios (in 2020 $)</b>",
                'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
         xaxis_title="Before retirement", xaxis_tickformat=",",
         yaxis_title="After retirement", yaxis_tickformat=",",
@@ -564,8 +574,13 @@ def show_plot_button(df):
     st.text("")
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
-        st.write("This figure shows the decomposition of your household’s income in retirement: on the left are the various income sources, including the annuity purchased upon retirement with all your financial wealth; and on the right are the uses of that income. For homeowners who choose to sell their home at retirement, this includes a “rent equivalent”, to account for the fact that no rent had to be paid prior to retirement and make consumption possibilities comparable. In certain cases, “Net tax liability” will appear as an income source because it is negative – i.e., the household has more credits and deductions than it has taxes to pay.")
-    
+        st.markdown("""
+            * This figure shows the decomposition of your household’s income in retirement:
+                * on the left are the various income sources, including the annuity purchased upon retirement with all your financial wealth;
+                * and on the right are the uses of that income.
+            * For homeowners who choose to sell their home at retirement, this includes a “rent equivalent”, to account for the fact that no rent had to be paid prior to retirement and make consumption possibilities comparable.
+            * In certain cases, “Net tax liability” will appear as an income source because it is negative – i.e., the household has more credits and deductions than it has taxes to pay.""", unsafe_allow_html=True)
+
     
 # SCRIPT INTERFACE
 
