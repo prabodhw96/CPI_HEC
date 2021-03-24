@@ -51,7 +51,7 @@ def ask_hh():
 def info_spouse(which='first', step_amount=100):
     d = {}
     d['byear'] = st.number_input("Birth year", min_value=1957, max_value=2020,
-                                 key="byear_"+which, value=1980, help="Enter your birth year")
+                                 key="byear_"+which, value=1980)
     if d['byear'] < 1957:
         st.error("Sorry, the simulator only works for people born after 1956")
         st.stop()
@@ -59,9 +59,10 @@ def info_spouse(which='first', step_amount=100):
     d_gender = {'female': 'Female', 'male': 'Male'}
     d['sex'] = st.radio("Gender", options=list(d_gender.keys()),
                         format_func=lambda x: d_gender[x], key="sex_"+which, index=1)
-    age = 2021 - d['byear']
+    age = 2020 - d['byear']
     d['ret_age'] = st.number_input("Intended retirement age", min_value=age+1,
-                                   key="ret_age_"+which, value=max(age + 1, 65))
+                                   key="ret_age_"+which, value=max(age + 1, 65))    
+    
     d['claim_age_cpp'] = min(d['ret_age'], 70)
     st.markdown("""<div class="tooltip">CPP<span class="tooltiptext">Canadian Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> claim age is set at the retirement age you entered above, but no less than 60 y.o. and no more than 70 y.o. &nbsp; OAS claim age is set at 65 y.o.""", unsafe_allow_html=True)
     st.text("")
@@ -86,7 +87,8 @@ def info_spouse(which='first', step_amount=100):
     if savings_plan == "Yes":
         d.update(fin_accounts(which=which))
     else:
-        d_fin_details =  {key: 0 for key in ['cap_gains_unreg', 'realized_losses_unreg', 'init_room_rrsp', 'init_room_tfsa']}
+        d_fin_details = {key: 0 for key in ['cap_gains_unreg', 'realized_losses_unreg',
+                                             'init_room_rrsp', 'init_room_tfsa']}
         d.update(d_fin_details)
 
     db_pension = st.radio("Will you receive a defined-benefit (DB) pension from your current or a previous employer", ["Yes", "No"], 
@@ -200,8 +202,7 @@ def info_residence(which, step_amount=1000):
     if sell == "Yes":
         user_options[f'sell_{which}_resid'] = True
         d_res[f'{which}_residence'] = st.number_input(
-            "Value at the end of 2019 (in $)", in_value=0,
-
+            "Value at the end of 2019 (in $)", min_value=0,
             step=step_amount, key="res_value_"+which)
     else:
         d_res[f'{which}_residence'] = 0
@@ -317,13 +318,13 @@ def financial_products(account, balance, which, d_accounts_inv, step_amount=100)
     total_fp = 0
     st.markdown("### {} - Financial products".format(d_accounts_inv[account]))
     fin_prods = ["crsa", "hipsa", "mf", "stocks", "bonds", "gic", "cvplp", "isf", "etf"]
-    fin_prods_dict = {"crsa": "Amount in checking or regular savings account",
-                      "hipsa": "Amount in high interest/premium savings account",
-                      "mf": "Amount in mtual funds",
-                      "stocks": "Amount in stocks",
-                      "bonds": "Amount in bonds",
-                      "gic": "Amount in GICs",
-                      "etf": "Amount in ETFs"}
+    fin_prods_dict = {"crsa": "Checking or regular savings account",
+                      "hipsa": "High interest/premium savings account",
+                      "mf": "Mutual funds",
+                      "stocks": "Stocks",
+                      "bonds": "Bonds",
+                      "gic": "GICs",
+                      "etf": "ETFs"}
 
     fin_prods_rev = {v: k for k, v in fin_prods_dict.items()} #addition
     fin_prod_list = list(fin_prods_rev.keys()) #addition
@@ -417,8 +418,10 @@ def show_plot_button(df):
     fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
                             mode='lines', name="Replacement rate = 80%",
                             line=dict(color="Green", width=2, dash='dot')))
+    if cons_bef[1] - cons_bef[0] < 10:
+        fig.update_xaxes(range=[cons_bef[0] - 500, cons_bef[0] + 500])
     fig.update_layout(height=500, width=700,
-                    title={'text': f"Household consumption before and after retirement (in $) <br>({nsim} realizations)",
+                    title={'text': f"Household consumption before and after retirement <br> (in 2020 $, {nsim} realizations)",
                             'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
                     xaxis_title="Before retirement",
                     xaxis_tickformat=",",
@@ -429,9 +432,7 @@ def show_plot_button(df):
                     legend={'traceorder':'reversed'})
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
-        st.write("This figure shows 25 “realizations” of consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later). Variations in consumption are driven by the stochastic processes for earnings and investment returns. The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.")
-    
-    ## to add text: st.write('whatever i want TBC')
+        st.write("This figure shows 25 “realizations” of consumption possibilities before retirement (at age 55 or the year before retirement, if earlier, but no sooner than 2021) and after (at age 65 or in the retirement year, if later). Variations in consumption are driven by the stochastic processes for earnings and investment returns. The two dashed lines show where dots would lie for a “consumption replacement rate” of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.")
 
     # create data with changes in contribution rate rrsp and retirement age
     df_change = create_data_changes(df)
@@ -478,7 +479,7 @@ def show_plot_button(df):
 
 
     fig.update_layout(height=500, width=700,
-                    title={'text': f"Household consumption before and after retirement <br> under alternative scenarios (in $)",
+                    title={'text': f"Household consumption before and after retirement <br> under alternative scenarios (in 2020 $)",
                             'x': 0.5,
                             'xanchor': 'center',
                             'yanchor': 'top'},
@@ -495,7 +496,7 @@ def show_plot_button(df):
     st.text("")
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
-        st.write("This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later) for the average “realization” of the stochastic processes for earnings and investment returns (deterministic case). The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature. The other 4 points shown in the figure illustrate the effect of alternative actions for you: A) retirement 2 years later than you indicated; B) retiring 2 years earlier then you indicated; C) contributing to an RSSP 5% more of your earnings than you indicated; D) contributing to an RSSP 10% more of your earnings than you indicated.")
+        st.write("This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier) and after (at age 65 or in the retirement year, if later), for the mean realization of the stochastic processes for earnings and investment returns (the deterministic case). The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature. The other 4 points shown in the figure illustrate the effect of alternative actions for you: A) retiring 2 years later than you indicated; B) retiring 2 years earlier then you indicated; C) contributing to an RSSP 5% more of your earnings than you indicated; D) contributing to an RSSP 10% more of your earnings than you indicated.")
 
     
     # Income decomposition
@@ -552,7 +553,7 @@ def show_plot_button(df):
     fig = go.Figure(data)
     fig.update_layout(
         height=500, width=700,
-        title={'text': f"Household consumption before and after retirement <br> under alternative scenarios (in $)",
+        title={'text': f"Household consumption before and after retirement <br> under alternative scenarios (in 2020 $)",
                'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
         xaxis_title="Before retirement", xaxis_tickformat=",",
         yaxis_title="After retirement", yaxis_tickformat=",",
@@ -632,7 +633,7 @@ st.text("")
 col1, col2, col3 = st.beta_columns(3)
 with col1:
     with st.beta_expander("Use of the tool"):
-        st.markdown("Welcome to the individual online interface of [the CPR simulator, a freely available Python package](https://ire.hec.ca/en/canadians-preparation-retirement-cpr) also available for download for batch use. This tool is intended for use by individuals born in 1957 or later and not yet retired. To use the tool, fill in the fields and hit “Show figures” at the bottom of the page. *Your data is anonymous, only used for calculations, and is never stored; further, its transmission is encrypted.*")
+        st.markdown("Welcome to the individual online interface of [the CPR simulator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), [a freely available Python package](https://rsi-models.github.io/CPR/en/) also available for download for batch use. This tool is intended for use by individuals born in 1957 or later and not yet retired. To use the tool, fill in the fields and hit “Show figures” at the bottom of the page. *Your data is anonymous, only used for calculations, and is never stored; further, its transmission is encrypted.*")
 with col2:
     with st.beta_expander("Functioning of the tool"):
         st.markdown("""The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div> projects a household’s financial situation into the future using [a number of processes and hypotheses](https://cpr-pdf.herokuapp.com/) to a pre-specified age of retirement for each individual. At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for consumption – after debt payments, saving, taxes, and housing for homeowners – *just prior to and just after retirement, in 2020 (real) dollars.* It returns, in the form of figures, the pre- and post-retirement financial situation, as well as a decomposition of income in retirement.""", unsafe_allow_html=True)
@@ -673,12 +674,18 @@ with col_p1:
 
 with col_p2:
     if st.button("Update figures", False, help="Click here to update the simulations results"):
-        show_plot_button(df)
         st.markdown("# Simulations Results")
+        show_plot_button(df)
+        st.text("")
+        st.text("")
+        st.markdown("# Financial assumptions")
+        st.write("to be available soon")
 
-if st.button("Show figures", False, help="Click here to see the simluations results"):
+if st.button("Show figures", False, help="Click here to see the simulations results"):
     with col_p2:
+        st.markdown("# Simulations Results")
         show_plot_button(df)
         st.text("")
         st.text("")
-        st.markdown("# Simulations Results")
+        st.markdown("# Financial assumptions")
+        st.write("to be available soon")
