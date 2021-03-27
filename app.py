@@ -5,7 +5,6 @@ import seaborn as sns
 import sys
 import pickle
 import math
-# sys.path.insert(1, r'C:\Users\pyy\Dropbox (CEDIA)\CPR\Model')
 from CPR import main
 import streamlit as st
 import plotly.graph_objects as go
@@ -17,7 +16,6 @@ def ask_hh():
     st.markdown("# Respondent")
     d_hh = info_spouse()
     st.markdown("# Spouse")
-    # st.markdown("Do you have a spouse?")
     spouse_ques = st.radio("Do you have a spouse?", ["Yes", "No"], index=1)
     d_hh['couple'] =  (spouse_ques == "Yes")
     if d_hh['couple']:
@@ -52,35 +50,37 @@ def info_spouse(which='first', step_amount=100):
     d = {}
     d['byear'] = st.number_input("Birth year", min_value=1957, max_value=2020,
                                  key="byear_"+which, value=1980)
-    if d['byear'] < 1957:
-        st.error("Sorry, the simulator only works for people born after 1956")
-        st.stop()
         
     d_gender = {'female': 'Female', 'male': 'Male'}
     d['sex'] = st.radio("Gender", options=list(d_gender.keys()),
-                        format_func=lambda x: d_gender[x], key="sex_"+which, index=1)
+                        format_func=lambda x: d_gender[x], key="sex_"+which, 
+                        help="Used to compute life expectancy and the cost of annuities", index=1)
+
     age = 2020 - d['byear']
     d['ret_age'] = st.number_input("Intended retirement age", min_value=age+1,
                                    key="ret_age_"+which, value=max(age + 1, 65))    
     
     d['claim_age_cpp'] = min(d['ret_age'], 70)
-    st.markdown("""<div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> claim age is set at the retirement age you entered above, but no less than 60 y.o. and no more than 70 y.o. &nbsp; OAS claim age is set at 65 y.o.""", unsafe_allow_html=True)
+    st.markdown("""<div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> claim age is set at the retirement age you entered above, but no less than 60&nbsp;y.o. and no more than 70&nbsp;y.o. <div class="tooltip">OAS<span class="tooltiptext">Old Age Security</span></div>/<div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div> and Allowance benefits begin at 65&nbsp;y.o.""", unsafe_allow_html=True)
     st.text("")
     d_education = {'No certificate, diploma or degree': 'less than high school',
                    'Secondary (high) school diploma or equivalency certificate': 'high school',
                    'Trade certificate or diploma': 'post-secondary',
-                   ' College, CEGEP or other non-university certificate or diploma (other than trade certificates or diplomas)': 'post-secondary',
+                   'College, CEGEP or other non-university certificate or diploma (other than trade certificates or diplomas)': 'post-secondary',
                    'University certificate or diploma below bachelor level': 'university',
                    "Bachelor's degree": 'university',
                    'University certificate or diploma above bachelor level': 'university'}
-    degree = st.selectbox("Education (highest degree obtained)", list(d_education.keys()), key="education_"+which)
+    degree = st.selectbox("Education (highest degree obtained)", list(d_education.keys()),
+                          key="education_"+which, help="Used to forecast your earnings")
     d['education'] = d_education[degree]
     d['init_wage'] = st.number_input("Annual earnings for 2020 (in $)", min_value=0,
                                      step=step_amount, key="init_wage_"+which, value=50000)
 
-    pension = st.radio("Did you receive a pension in 2020?", ["Yes", "No"], key="pension_radio_"+which, index=1)
+    pension = st.radio("Did you receive a pension in 2020?", ["Yes", "No"],
+                       key="pension_radio_"+which, index=1)
     if pension == "Yes":
-        d['pension'] = st.number_input("Yearly amount of pension (in $)",  min_value=0, step=step_amount, key="pension_"+which, value=0)   
+        d['pension'] = st.number_input("Yearly amount of pension (in $)",  min_value=0,
+                                       step=step_amount, key="pension_"+which, value=0)   
 
     savings_plan = st.radio("Do you have any savings or plan to save in the future?", ["Yes", "No"], 
                             key="savings_plan_"+which, index=1)
@@ -91,7 +91,7 @@ def info_spouse(which='first', step_amount=100):
                                              'init_room_rrsp', 'init_room_tfsa']}
         d.update(d_fin_details)
 
-    db_pension = st.radio("Will you receive a defined-benefit (DB) pension from your current or a previous employer", ["Yes", "No"], 
+    db_pension = st.radio("Will you receive a defined-benefit (DB) pension from your current or a previous employer?", ["Yes", "No"], 
                             key="db_pension_"+which, index=1)
     if db_pension == "Yes":
         st.markdown("### DB Pension")
@@ -99,13 +99,12 @@ def info_spouse(which='first', step_amount=100):
             "Yearly amount of DB pension from previous employer (in $), once in retirement",
             min_value=0, step=step_amount, key="income_previous_db_" + which)
         d['rate_employee_db'] = st.slider(
-            "Employee contribution rate of current DB (in % of earnings)", min_value=0.0,
-            max_value=9.0, step=1., key="rate_employee_db_"+which, value=5.0) / 100
+            "Employee contribution rate of current DB employer plan (in % of earnings)", min_value=0.0,
+            max_value=10.0, step=0.5, key="rate_employee_db_"+which, value=5.0) / 100
         d['replacement_rate_db'] = st.slider(
             "Replacement rate of current DB employer plan (in % of earnings), once in retirement",
             min_value=0.0, max_value=70.0, step=1., key="replacement_rate_db_" + which, value=0.0) / 100
         
-
     dc_pension = st.radio(
         "Do you have a defined-contribution (DC) or similar pension plan from your current or a previous employer?",
         ["Yes", "No"], key="dc_pension_"+which, index=1)
@@ -116,10 +115,10 @@ def info_spouse(which='first', step_amount=100):
             step=step_amount, value=0, key="init_dc_" + which)
         d['rate_employee_dc'] = st.slider(
             "Employee contribution rate of current DC employer plan (in % of earnings)",
-            min_value=0.0, max_value=30.0, step=0.5, key="rate_employee_dc_"+which, value=5.0) / 100
+            min_value=0.0, max_value=20.0, step=0.5, key="rate_employee_dc_"+which, value=5.0) / 100
         d['rate_employer_dc'] = st.slider(
-            "Employer contribution rate of current DC (in % of earnings)",
-            min_value=0.0, max_value=30.0, step=0.5, key="rate_employer_dc_"+which, value=5.0) / 100
+            "Employer contribution rate of current DC employer plan (in % of earnings)",
+            min_value=0.0, max_value=20.0, step=0.5, key="rate_employer_dc_"+which, value=5.0) / 100
         if d['rate_employee_dc'] + d['rate_employer_dc'] > 0.18:
             st.warning("**Warning:** Tax legislation caps the combined employee-employer contribution rate at 18% of earnings")
         
@@ -130,9 +129,9 @@ def info_spouse(which='first', step_amount=100):
 
 def info_hh(prod_dict, step_amount=100):
     d_others = {}
-    st.markdown("### Which province do you live in?")
     d_prov = {"qc": "Quebec", "on": "Other (using the Ontario tax system)"}
-    d_others['prov'] = st.selectbox("Province", options=list(d_prov.keys()),
+    d_others['prov'] = st.selectbox("Which province do you live in?",
+                                    options=list(d_prov.keys()),
                                     format_func=lambda x: d_prov[x], key="prov")
     d_others.update(mix_fee(prod_dict))
     st.markdown("### Residences")
@@ -273,35 +272,38 @@ def mix_fee(prod_dict):
 def fin_accounts(which, step_amount=100):
     d_fin = {}
     d_fin["bal_unreg"] = 0 #default
-    st.markdown("### Savings account")
-    d_accounts = {'RRSP': "Registered Retirement Savings Plans (RRSPs)",
-                  'TFSA': "Tax-Free Savings Accounts (TFSAs)",
-                  'other registered': "Other registered accounts",
-                  'unregistered': "Unregistered accounts"}
-    d_accounts_inv = {v: k for k, v in d_accounts.items()}
+    st.markdown("### Savings accounts")
+    d_accounts = {'rrsp': ['RRSP', "Registered Retirement Savings Plans (RRSPs)"],
+                  'tfsa': ['TFSA', "Tax-Free Savings Accounts (TFSAs)"],
+                  'other_reg':['Other registered', "Other registered accounts"],
+                  'unreg': ['Unregistered', "Unregistered accounts"]}
+    # d_accounts_inv = {v: k for k, v in d_accounts.items()}
     saving_plan_select = st.multiselect(
-        label="Select your savings accounts", options= [v for v in d_accounts.values()],
+        label="Select one or more account type(s)", options= [v[1] for v in d_accounts.values()],
         key="fin_acc_"+which)
-
-    for i in saving_plan_select:
-        st.markdown("### {}".format(i))
-        d_fin["bal_"+i] = st.number_input(
-            "Balance of your {} accounts at the end of 2019 (in $)".format(d_accounts_inv[i]), value=0, min_value=0, step=step_amount,
-            key="bal_"+i+"_"+which)
-        d_fin["cont_rate_"+i] = st.number_input(
+    selected_saving_plans = [key for key, val in d_accounts.items()
+                             if val[1] in saving_plan_select]
+    
+    for acc in selected_saving_plans:
+        short_acc_name = d_accounts[acc][0]
+        st.markdown("### {}".format(short_acc_name))
+        d_fin["bal_" + acc] = st.number_input(
+            "Balance of your {} accounts at the end of 2019 (in $)".format(short_acc_name),
+            value=0, min_value=0, step=step_amount, key=f"bal_{acc}_{which}")
+        d_fin["cont_rate_" + acc] = st.number_input(
             "Fraction of your earnings you plan to save annually in your {} accounts (in %)".format(
-                d_accounts_inv[i]), value=0, min_value=0, max_value=100, step=1, key="cont_rate_"+i+"_"+which)
-        d_fin["cont_rate_"+i] /= 100.0
-        d_fin["withdrawal_"+i] = st.number_input(
-            "Amount you plan ot withdraw annually from your {} accounts prior to retirement (in $)".format(d_accounts_inv[i]),
-            value=0, min_value=0, step=step_amount, key="withdrawal_"+i+"_"+which)
-        if i in ["rrsp", "tfsa"]:
-            d_fin["init_room_"+i] = st.number_input(
-                "{} contribution room at the end of 2019".format(d_accounts_inv[i]),
-                value=0, min_value=0, step=step_amount, key="init_room_"+i+"_"+which)
+                short_acc_name), value=0, min_value=0, max_value=100, step=1, key=f"cont_rate_{acc}_{which}") / 100
+        d_fin["withdrawal_" + acc] = st.number_input(
+            "Amount you plan ot withdraw annually from your {} accounts prior to retirement (in $)".format(
+                short_acc_name), value=0, min_value=0, step=step_amount, key=f"withdraw_{acc}_{which}")
+        if acc in ["rrsp", "tfsa"]:
+            d_fin["init_room_" + acc] = st.number_input(
+                "{} contribution room at the end of 2019".format(short_acc_name),
+                value=0, min_value=0, step=step_amount, key=f"init_room_{acc}_{which}")
 
-        if d_fin["bal_"+i] > 0:
-            d_fin.update(financial_products(i, d_fin["bal_"+i], which, d_accounts_inv, step_amount=step_amount))
+        if d_fin["bal_" + acc] > 0:
+            d_fin.update(financial_products(acc, d_fin["bal_" + acc], which,
+                                            short_acc_name, step_amount=step_amount))
 
     if d_fin["bal_unreg"] > 0:
         st.markdown("### Gains and losses in unregistered Account")
@@ -313,10 +315,10 @@ def fin_accounts(which, step_amount=100):
             value=0, min_value=0, step=step_amount, key="realized_losses_unreg_"+which)
     return d_fin
 
-def financial_products(account, balance, which, d_accounts_inv, step_amount=100):
+def financial_products(account, balance, which, short_acc_name, step_amount=100):
     d_fp = {}
     total_fp = 0
-    st.markdown("### {} - Financial products".format(d_accounts_inv[account]))
+    st.markdown("### {} - Financial products".format(short_acc_name))
     fin_prods = ["crsa", "hipsa", "mf", "stocks", "bonds", "gic", "cvplp", "isf", "etf"]
     fin_prods_dict = {"crsa": "Checking or regular savings account",
                       "hipsa": "High interest/premium savings account",
@@ -329,18 +331,19 @@ def financial_products(account, balance, which, d_accounts_inv, step_amount=100)
     fin_prods_rev = {v: k for k, v in fin_prods_dict.items()} #addition
     fin_prod_list = list(fin_prods_rev.keys()) #addition
     fin_prod_select = st.multiselect(
-        label="Select financial products", options=fin_prod_list,
-        key="fin_prod_list_"+account+"_"+which) #addition
+        label="Select the financial products you own (total must add up to account balance)",
+        options=fin_prod_list, key="fin_prod_list_"+ account +"_"+which) #addition
+    if not fin_prod_select:
+        st.error("No financial product selected. IF NO PRODUCTS ARE SELECTED, a default allocation will be implemented for this account type.")
     fin_prods = [fin_prods_rev[i] for i in fin_prod_select] #addition
     for i in fin_prods:
-        d_fp[account+"_"+i] = st.number_input(fin_prods_dict[i], value=0, min_value=0,
+        d_fp[account+"_"+i] = st.number_input(fin_prods_dict[i], value=0, min_value=0, max_value=balance,
                                               step=step_amount, key=account+"_"+i+"_"+which)
         total_fp += d_fp[account+"_"+i]
 
-    if total_fp != balance:
+    if total_fp != balance and len(fin_prod_select)!=0:
         st.error("Total amount in financial products ({} $) is not equal to amount in financial account ({} $)".format(
-            format(total_fp, ",d"), format(balance, ",d")))
-        st.stop()
+                format(total_fp, ",d"), format(balance, ",d")))
     return d_fp
 
 def create_dataframe(d_hh):
@@ -383,7 +386,6 @@ def show_plot_button(df):
     nsim = 25
     results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False,
                                    base_year=2020, **user_options, **returns, **mean_returns)
-    
     df_output = results.output
     check_cons_positive(df_output, cons_floor = 0)
     df_output['RRI'] = (df_output.cons_after / df_output.cons_bef * 100).round(1)
@@ -580,8 +582,7 @@ def show_plot_button(df):
                 * and on the right are the uses of that income.
             * For homeowners who choose to sell their home at retirement, this includes a “rent equivalent”, to account for the fact that no rent had to be paid prior to retirement and make consumption possibilities comparable.
             * In certain cases, “Net tax liability” will appear as an income source because it is negative – i.e., the household has more credits and deductions than it has taxes to pay.""", unsafe_allow_html=True)
-
-    
+        
 # SCRIPT INTERFACE
 
 # default options
@@ -608,13 +609,23 @@ mean_returns = {'mu_equity': 0.0688,
 
 def change_mean_returns(mean_returns):
     st.markdown("# Financial assumptions")
-    st.write("You can change historical long-term returns used in simulation:")
-    adjusted_mean_returns = {}
-    for key, val in mean_returns.items():
-        adjusted_mean_returns[key] = st.slider(
-            f'Long-term mean real return on {key[3:]}', min_value=0.0, max_value=10.0,
-            step=1.0, key="long_term_returns_"+key[3:], value=float(val)) / 100.0
-    return adjusted_mean_returns
+    st.markdown("Use [default assumptions](https://ire.hec.ca/wp-content/uploads/2021/03/assumptions.pdf) regarding future asset/investment returns?")
+    keep_returns = st.radio(
+        "", 
+        ["Yes", "No"], index=0)
+    if keep_returns == 'No':
+        st.write("Long-term mean...")
+        for key, val in mean_returns.items():
+            if key != 'mu_price_rent':
+                mean_returns[key] = st.slider(
+                    f'... annual real return on {key[3:]} (in %)', min_value=0.0, max_value=10.0,
+                    step=1.0, key="long_term_returns_"+key[3:], value=100 * val,
+                    help="Nominal returns are used in the simulator for taxation purposes. We assume a 2% annual future inflation rate.") / 100.0
+            
+        mean_returns['mu_price_rent'] = st.slider(
+                f'... price-rent ratio', min_value=0.0, max_value=30.0,
+                step=1.0, key="long_term_price_rent",
+                value=float(mean_returns['mu_price_rent']))
 
 st.markdown(f"""<style>
     .reportview-container .main .block-container{{
@@ -652,9 +663,9 @@ st.markdown(f"""<style>
     }}
     </style>""", unsafe_allow_html=True)
 
-logo1, _, logo2 = st.beta_columns([0.2,0.6,0.2])
+logo1, _, logo2 = st.beta_columns([0.2, 0.6, 0.2])
 with logo1:
-    rsi = Image.open("RSI.jpg")
+    rsi = Image.open("RSI.png")
     st.image(rsi)
 with logo2:
     gri = Image.open("GRI.png")
@@ -663,20 +674,17 @@ with logo2:
 st.markdown("<h1 style='text-align: center;font-size: 40px'>Canadians’ Preparation for Retirement (CPR)</h1>", unsafe_allow_html=True)
 st.text("")
 st.text("")
-col1, col2, col3 = st.beta_columns(3)
+col1, col2 = st.beta_columns(2)
 with col1:
     with st.beta_expander("Use of the tool"):
         st.markdown("Welcome to the individual online interface of [the CPR simulator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), [a freely available Python package](https://rsi-models.github.io/CPR/en/) also available for download for batch use. This tool is intended for use by individuals born in 1957 or later and not yet retired. To use the tool, fill in the fields and hit “Show figures” at the bottom of the page. *Your data is anonymous, only used for calculations, and is never stored; further, its transmission is encrypted.*")
 with col2:
     with st.beta_expander("Functioning of the tool"):
         st.markdown("""The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div> projects a household’s financial situation into the future using [a number of processes and hypotheses](https://ire.hec.ca/wp-content/uploads/2021/03/assumptions.pdf) to a pre-specified age of retirement for each individual. At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for consumption – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. It returns, in the form of figures, the pre- and post-retirement financial situation, as well as a decomposition of income in retirement.""", unsafe_allow_html=True)
-with col3:
-    with st.beta_expander("Public retirement benefits"):
-        st.markdown("""For the simulations, the claim age for <div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> retirement benefits is set at the specified retirement age (or 60 years old if retirement age is earlier; or 70 years old if retirement age is later). <div class="tooltip">OAS<span class="tooltiptext">Old Age Security</span></div>/<div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div> and Allowance benefits begin at 65 years old.""", unsafe_allow_html=True)
 
 st.sidebar.markdown("# DISCLAIMER")
 st.sidebar.markdown("This tool uses the freely available [Canadians' Preparation for Retirement (CPR) calculator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), \
-    developed by a team at [HEC Montréal](https://www.hec.ca/en/)’s Retirement and Savings Institute with financial support from the \
+    developed by a team at [HEC Montréal](https://www.hec.ca/en/)’s [Retirement and Savings Institute](https://ire.hec.ca/en/) with financial support from the \
     [Global Risk Institute](https://globalriskinstitute.org/)’s [National Pension Hub](https://globalriskinstitute.org/national-pension-hub/).")
 st.sidebar.markdown("It is provided “as is” for personal use only, without any warranty regarding its accuracy, appropriateness, completeness or any other quality.")
 st.sidebar.markdown("Its results are deemed to be general information on retirement preparation and should not be construed as financial advice; qualified financial advice should be sought before making any financial decision based on this tool.")
@@ -687,13 +695,14 @@ with st.beta_container():
     st.text("")
     colt, _ = st.beta_columns([0.56, 0.44])
     with colt:
-        st.success("**Change theme:** On top right corner, click on ☰ -> Settings -> Theme and select *Light/Dark*.")
+        st.success("**To change the background colour:** On top right corner, click on ☰ ➡️ Settings ➡️ Theme and select *Light/Dark*.")
     st.text("")
     st.text("")
 
 col_p1, _, col_p2 = st.beta_columns([0.465, 0.025, 0.51])
 
 with col_p1:
+    change_mean_returns(mean_returns)
     d_hh = ask_hh()
     df = create_dataframe(d_hh)
     df = df.fillna(0)
@@ -716,12 +725,10 @@ with col_p2:
         show_plot_button(df)
         st.text("")
         st.text("")
-        #mean_returns = change_mean_returns(mean_returns)
 
-if st.button("Show figures", False, help="Click here to see the simulation results"):
+if st.button("Show figures (see top of page)", False, help="Click here to see the simulation results"):
     with col_p2:
         st.markdown("# Simulation results")
         show_plot_button(df)
         st.text("")
         st.text("")
-        #mean_returns = change_mean_returns(mean_returns)
