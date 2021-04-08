@@ -1,14 +1,14 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import sys
-import pickle
 import math
 from CPR import main
 import streamlit as st
 import plotly.graph_objects as go
+import plotly.express as px
 from PIL import Image
+
+st.set_page_config(page_title='CPR')
 
 # DEFINE FUNCTIONS
 
@@ -17,18 +17,18 @@ def ask_hh():
     d_hh = info_spouse()
     st.markdown("# Spouse")
     spouse_ques = st.radio("Do you have a spouse?", ["Yes", "No"], index=1)
-    d_hh['couple'] =  (spouse_ques == "Yes")
-    if d_hh['couple']:
-        d_hh.update(info_spouse('second'))
+    d_hh["couple"] = spouse_ques == "Yes"
+    if d_hh["couple"]:
+        d_hh.update(info_spouse("second"))
 
     fin_accs = ["rrsp", "tfsa", "other_reg", "unreg"]
     fin_prods = ["crsa", "hipsa", "mf", "stocks", "bonds", "gic", "cvplp", "isf", "etf"]
     fin_list = []
     for i in fin_accs:
         for j in fin_prods:
-            fin_list.append(i+"_"+j)
-            if d_hh['couple']:
-                fin_list.append("s_"+i+"_"+j)
+            fin_list.append(i + "_" + j)
+            if d_hh["couple"]:
+                fin_list.append("s_" + i + "_" + j)
 
     fin_dict = {}
     for i in fin_list:
@@ -43,13 +43,12 @@ def ask_hh():
 
     st.markdown("# Household")
     d_hh.update(info_hh(prod_dict))
-    d_hh['weight'] = 1
+    d_hh["weight"] = 1
     return d_hh
 
 def info_spouse(which='first', step_amount=100):
     d = {}
-    d['byear'] = st.number_input("Birth year", min_value=1957, max_value=2020,
-                                 key="byear_"+which, value=1980)
+    d['byear'] = st.number_input("Birth year", min_value=1957, max_value=2020, key="byear_"+which, value=1980)
         
     d_gender = {'female': 'Female', 'male': 'Male'}
     d['sex'] = st.radio("Gender", options=list(d_gender.keys()),
@@ -61,8 +60,18 @@ def info_spouse(which='first', step_amount=100):
                                    key="ret_age_"+which, value=max(age + 1, 65))    
     
     d['claim_age_cpp'] = min(d['ret_age'], 70)
-    st.markdown("""<div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>/<div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div> claim age is set at the retirement age you entered above, but no less than 60&nbsp;y.o. and no more than 70&nbsp;y.o. <div class="tooltip">OAS<span class="tooltiptext">Old Age Security</span></div>/<div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div> and Allowance benefits begin at 65&nbsp;y.o.""", unsafe_allow_html=True)
+    st.markdown("""
+        <div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>
+        /
+        <div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div>
+        claim age is set at the retirement age you entered above, but no less than 60&nbsp;y.o. and no more than 70&nbsp;y.o. 
+        <div class="tooltip">OAS<span class="tooltiptext">Old Age Security</span></div>
+        /
+        <div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div>
+        and Allowance benefits begin at 65&nbsp;y.o.
+        """, unsafe_allow_html=True)
     st.text("")
+
     d_education = {'No certificate, diploma or degree': 'less than high school',
                    'Secondary (high) school diploma or equivalency certificate': 'high school',
                    'Trade certificate or diploma': 'post-secondary',
@@ -74,7 +83,7 @@ def info_spouse(which='first', step_amount=100):
                           key="education_"+which, help="Used to forecast your earnings")
     d['education'] = d_education[degree]
     d['init_wage'] = st.number_input("Annual earnings for 2020 (in $)", min_value=0,
-                                     step=step_amount, key="init_wage_"+which, value=50000)
+                                     step=step_amount, key="init_wage_"+which, value=60000)
 
     pension = st.radio("Did you receive a pension in 2020?", ["Yes", "No"],
                        key="pension_radio_"+which, index=1)
@@ -101,9 +110,15 @@ def info_spouse(which='first', step_amount=100):
         d['rate_employee_db'] = st.slider(
             "Employee contribution rate of current DB employer plan (in % of earnings)", min_value=0.0,
             max_value=10.0, step=0.5, key="rate_employee_db_"+which, value=5.0) / 100
-        d['replacement_rate_db'] = st.slider(
-            "Replacement rate of current DB employer plan (in % of earnings), once in retirement",
-            min_value=0.0, max_value=70.0, step=1., key="replacement_rate_db_" + which, value=0.0) / 100
+        
+        # replacement rate DB
+        age = 2021 - d['byear']
+        years_service = st.number_input(
+            'Years of service to date contributing to current DB employer plan',
+            min_value=0, max_value=age - 18, key='year_service', value=0,
+            help="The simulator adds to this number the years of service until your retirement age, assuming you will keep participating in the same plan, and multiplies this by the pension rate below")
+        others['perc_year_db'] = st.slider('Pension rate (in % of earnings per year of service)', min_value=1.0, max_value=3.0, value=2.0, step=0.5, key='perc_year_db') / 100
+        d['replacement_rate_db'] = min((years_service + d['ret_age'] - age) * others['perc_year_db'], 0.70)
         
     dc_pension = st.radio(
         "Do you have a defined-contribution (DC) or similar pension plan from your current or a previous employer?",
@@ -172,8 +187,7 @@ def debts(step_amount=100):
                  'Other debt':'other_debt'}
     l_debts = debt_dict.values()
 
-    debt_list = st.multiselect(label="Select your debts types", options=list(debt_dict.keys()),
-                               key="debt_names") #addition
+    debt_list = st.multiselect(label="Select your debt types", options=list(debt_dict.keys()), key="debt_names") #addition
 
     d_debts = {}
     for i in debt_list:
@@ -294,7 +308,7 @@ def fin_accounts(which, step_amount=100):
             "Fraction of your earnings you plan to save annually in your {} accounts (in %)".format(
                 short_acc_name), value=0, min_value=0, max_value=100, step=1, key=f"cont_rate_{acc}_{which}") / 100
         d_fin["withdrawal_" + acc] = st.number_input(
-            "Amount you plan ot withdraw annually from your {} accounts prior to retirement (in $)".format(
+            "Amount you plan to withdraw annually from your {} accounts prior to retirement (in $)".format(
                 short_acc_name), value=0, min_value=0, step=step_amount, key=f"withdraw_{acc}_{which}")
         if acc in ["rrsp", "tfsa"]:
             d_fin["init_room_" + acc] = st.number_input(
@@ -302,8 +316,7 @@ def fin_accounts(which, step_amount=100):
                 value=0, min_value=0, step=step_amount, key=f"init_room_{acc}_{which}")
 
         if d_fin["bal_" + acc] > 0:
-            d_fin.update(financial_products(acc, d_fin["bal_" + acc], which,
-                                            short_acc_name, step_amount=step_amount))
+            d_fin.update(financial_products(acc, d_fin["bal_" + acc], which, short_acc_name, step_amount=step_amount))
 
     if d_fin["bal_unreg"] > 0:
         st.markdown("### Gains and losses in unregistered Account")
@@ -363,10 +376,10 @@ def create_dataframe(d_hh):
 
 def check_cons_positive(df, cons_floor = 0):
     if len(df[df["cons_bef"] < cons_floor]):
-        st.error("Consumption before retirement is negative: savings or debt payments are too high")
+        st.error("Your income available for spending before retirement is negative: savings or debt payments are too high.")
         st.stop()
     if len(df[df["cons_after"] < cons_floor]):
-        st.error("Consumption after retirement is negative: debt payments are too high")
+        st.error("Your income available for spending in retirement ie negative. This may be due to: 1) your mortgage repayment being too slow (you may try selling your home upon retirement); 2) the value of your imputed rent in retirement being too high (you may try home downsizing at retirement).")
         st.stop()
 
 def create_data_changes(df):
@@ -378,6 +391,43 @@ def create_data_changes(df):
     return df_change
 
 
+# CHANGES TO PARAMETERS
+
+def change_mean_returns(mean_returns):
+    st.markdown("# Financial assumptions")
+    st.markdown("Use [default assumptions](https://ire.hec.ca/wp-content/uploads/2021/03/assumptions.pdf) regarding future asset/investment returns?")
+    keep_returns = st.radio("", ["Yes", "No"], key='keep_returns', index=0)
+    if keep_returns == 'No':
+        st.write("Long-term mean...")
+        for key, val in mean_returns.items():
+            if key != 'mu_price_rent':
+                mean_returns[key] = st.slider(
+                    f'... annual real return on {key[3:]} (in %)', min_value=0.0, max_value=10.0,
+                    step=1.0, key="long_term_returns_"+key[3:], value=100 * val,
+                    help="Nominal returns are used in the simulator for taxation purposes. We assume a 2% annual future inflation rate.") / 100.0
+            
+        mean_returns['mu_price_rent'] = st.slider(
+                f'... price-rent ratio', min_value=0.0, max_value=30.0,
+                step=1.0, key="long_term_price_rent",
+                value=float(mean_returns['mu_price_rent']))
+        
+def change_replace_rate_cons():
+    st.markdown("# Replacement rates") 
+    st.markdown("The adequacy of retirement incomes is often assessed using “consumption replacement rates”. In the case of income available for spending (i.e. net of taxes, savings and debt payments), thresholds of 80% and 65% have been used in the <div class=tooltip>RSI<span class=tooltiptext>Retirement and Savings Institute</span></div>’s [June 2020 report](https://ire.hec.ca/en/canadians-preparation-retirement-cpr/) report  as well as in previous research and policy literature. Use these thresholds as benchmarks in the results figures?", unsafe_allow_html=True)
+    
+    keep_rri = st.radio("", ["Yes", "No"], key='keep_rri', index=0)
+    if keep_rri == 'No':
+        replace_rate_cons['high'] = st.slider(
+            f'High replacement rate (in % of pre-retirement consumption)',
+            min_value=0, max_value=100,
+            step=1, key="high_replace_rate_cons", value=80)
+        replace_rate_cons['low'] = st.slider(
+            f'Low replacement rate (in % of pre-retirement consumption)',
+            min_value=0, max_value=replace_rate_cons['high'],
+            value=min(65, replace_rate_cons['high']),
+            step=1, key="low_replace_rate_cons")
+
+
 # GRAPHS
 
 def show_plot_button(df):
@@ -385,68 +435,68 @@ def show_plot_button(df):
     # stochastic results
     nsim = 25
     results = main.run_simulations(df, nsim=nsim, n_jobs=1, non_stochastic=False,
-                                   base_year=2020, **user_options, **returns, **mean_returns)
+                                   base_year=2020, **others,
+                                   **user_options, **returns, **mean_returns)
     df_output = results.output
     check_cons_positive(df_output, cons_floor = 0)
     df_output['RRI'] = (df_output.cons_after / df_output.cons_bef * 100).round(1)
+    
+    
+    # prob prepared:
+    pr_low = int(np.round(100 * (df_output['RRI'] >= replace_rate_cons['low']).mean(), 0))
+    pr_high = int(np.round(100 * (df_output['RRI'] >= replace_rate_cons['high']).mean(), 0))
 
-    # figure stochastic
     fig = go.Figure()
-    fig.add_scatter(x=df_output.cons_bef, y=df_output.cons_after,
-                    mode='markers', 
-                    marker=dict(size=10, line=dict(color='MediumPurple', width=2)),
+    cons_after = df_output.cons_after
+    noise = 0.2
+    y = np.random.uniform(low=1-noise, high=1+noise, size=cons_after.shape)
+    fig.add_scatter(x=cons_after, y=y, mode='markers',
+                    marker=dict(size=12, color='blue', opacity=0.3),
                     hovertemplate=
-                    'cons. bef. ret: $%{x:,.0f} <br>'+
-                    'cons. after ret: $%{y:,.0f} <br>'+
-                    '%{text}</b>' + 
+                    '$%{x:,.0f} <br>'
                     '<extra></extra>',
-                    text=['RRI: {:.0f}'.format(x) for x in df_output.RRI.values],
                     showlegend = False)
-
-    fig.add_scatter(x=[df_output.cons_bef.mean()], y=[df_output.cons_after.mean()],
-                    mode='markers', name='Mean consumptions',
-                    marker_size=15, marker_symbol='x',
+    
+    fig.add_scatter(x=[cons_after.mean()], y=[1], mode='markers',
+                    marker_symbol='x',
+                    marker=dict(size=15, color='darkred'),
+                    name='Average of the 25 realizations<br>(horizontal line = standard deviation)',
+                    error_x=dict(type='data', array=[cons_after.std()],
+                                 color='darkred', thickness=1.5, width=10),                    
                     hovertemplate=
-                    'cons. bef. ret: $%{x:,.0f} <br>'+
-                    'cons. after ret: $%{y:,.0f} <br>'+
-                    '%{text}</b>' + 
-                    '<extra></extra>',
-                    text=['RRI: {:.0f}'.format(x) for x in df_output.RRI.values])
+                    '$%{x:,.0f} <br>'
+                    '<extra></extra>')
 
-    cons_bef = np.array([df_output.cons_bef.min(), df_output.cons_bef.max()])
-    fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
-                            mode='lines', name="Replacement rate = 65%",
-                            line=dict(color="RoyalBlue", width=2, dash='dash')))
-    fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
-                            mode='lines', name="Replacement rate = 80%",
-                            line=dict(color="Green", width=2, dash='dot')))
-    if cons_bef[1] - cons_bef[0] < 10:
-        fig.update_xaxes(range=[cons_bef[0] - 500, cons_bef[0] + 500])
-    fig.update_layout(height=500, width=700,
-                    title={'text': f"<b>Household consumption before and after retirement <br> (in 2020 $, {nsim} realizations)</b>",
-                            'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
-                    xaxis_title="Before retirement",
+    fig.update_layout(height=250, width=700,
+                    title={'text': f"<b>Household income available for spending after retirement <br> (in 2020 $, {nsim} realizations)</b>",
+                            'x': 0.5, 'xanchor': 'center', 'yanchor': 'bottom'},
                     xaxis_tickformat=",",
-                    yaxis_title="After retirement",
-                    yaxis_tickformat=",",
-                    font=dict(family="Courier New, monospace",
-                                size=14, color="RebeccaPurple"),
+                    xaxis_title=f"<b>Probability of exceeding the selected low and high replacement rates,<br>respectively: {pr_low}% and {pr_high}%</b>",
+                    xaxis_title_font_size=14,
+                    yaxis=dict(range=[0, 2], visible= False, showticklabels=False),
+                    font=dict(size=14, color="Black"),
                     legend={'traceorder':'reversed'})
+    
     st.plotly_chart(fig)
+
     with st.beta_expander("HOW TO READ THIS FIGURE"):
         st.markdown("""
-            * This figure shows 25 “realizations” of consumption possibilities before retirement (at age 55 or the year before retirement, if earlier, but no sooner than 2020) and after (at age 65 or in the retirement year, if later).
-            * Variations in consumption are driven by the stochastic processes for earnings and investment returns.
-            * The two dashed lines show where dots would lie for a “consumption replacement rate” of 80% and 65%, respectively, two thresholds used in the <div class=tooltip>RSI<span class=tooltiptext>Retirement and Savings Institute</span></div>’s June 2020 report as well as in previous research and policy literature.""", unsafe_allow_html=True)
+            * This figure shows 25 “realizations”, or possibilities of household income available for spending after retirement, with their mean. “After retirement” is defined as the year when the the last spouse to retire is age 65, or his/her retirement year if later.
+            * Variations in income available for spending are driven by the stochastic processes for earnings and asset/investment returns.
+            * There is no vertical axis to the figure; the vertical differences are artificial and aim to prevent the data points from overlapping excessively.
+            """, unsafe_allow_html=True)
 
     # create data with changes in contribution rate rrsp and retirement age
     df_change = create_data_changes(df)
     results = main.run_simulations(df_change, nsim=1, n_jobs=1,non_stochastic=True,
-                                   base_year=2020, **user_options, **returns, **mean_returns)
+                                   base_year=2020, **others,
+                                   **user_options, **returns, **mean_returns)
     results.merge()
     df_change = results.df_merged
+    age_respondent = df_change['year_cons_bef'][0] - d_hh['byear']
     
     # graph changes in contribution rate rrsp and retirement age
+    
     names = ['Main scenario', 'RRSP contrib +5%', 'RRSP contrib +10%',
              'Retirement age -2 years', 'Retirement age +2 years']
     init_cons_bef, init_cons_after = df_change.loc[0, ['cons_bef', 'cons_after']].values.squeeze().tolist()
@@ -454,8 +504,9 @@ def show_plot_button(df):
     fig = go.Figure()
 
     l_cons_bef = []
-    colors = ['black', 'red', 'green', 'red', 'green']
-    symbols = ['circle', 'diamond', 'diamond', 'x', 'x']
+    colors = ['darkred', 'blue', 'green', 'blue', 'green']
+    symbols = ['x', 'diamond', 'diamond', 'circle', 'circle']
+    sizes = [15, 12, 12, 12, 12]
     for index, row in df_change.iterrows():
         l_cons_bef.append(row['cons_bef'])
         rri = row['cons_after'] / row['cons_bef'] * 100
@@ -463,38 +514,36 @@ def show_plot_button(df):
                         mode='markers',
                         marker_color=colors[index],
                         marker_symbol = symbols[index],
-                        marker=dict(size=12, line=dict(color='MediumPurple', width=2)),
+                        marker=dict(size=sizes[index]),
                         name=names[index],
                         hovertemplate=
                         '%{text} <br>'
-                        'cons. bef. ret: $%{x:,.0f} <br>'+
-                        'cons. after ret: $%{y:,.0f} <br>'+
+                        'Before ret: $%{x:,.0f} <br>'+
+                        'After ret: $%{y:,.0f} <br>'+
                         '<extra></extra>',
-                        text = [f'<b>{names[index]}</b> <br />RRI: {rri:.0f}'],
+                        text = [f'<b>{names[index]}</b> <br />Replacement rate = {rri:.0f}%'],
                         showlegend = True)
 
     cons_bef = np.array([min(l_cons_bef), max(l_cons_bef)])
-    fig.add_trace(go.Scatter(x=cons_bef, y=.80 * cons_bef,
-                            mode='lines', name="Replacement rate = 80%",
-                            line=dict(color="Green", width=2, dash='dot')))
-
-    fig.add_trace(go.Scatter(x=cons_bef, y=.65 * cons_bef,
-                            mode='lines', name="Replacement rate = 65%",
-                            line=dict(color="RoyalBlue", width=2, dash='dash')))
-
+    fig.add_trace(go.Scatter(
+        x=cons_bef, y=replace_rate_cons['high'] / 100 * cons_bef,
+        mode='lines', name=f"Replacement rate = {replace_rate_cons['high']}%",
+        line=dict(color="RoyalBlue", width=2, dash='dash')))
+    fig.add_trace(go.Scatter(
+        x=cons_bef, y=replace_rate_cons['low'] / 100 * cons_bef, mode='lines',
+        name=f"Replacement rate = {replace_rate_cons['low']}%",
+        line=dict(color="Green", width=2, dash='dot')))
 
     fig.update_layout(height=500, width=700,
-                    title={'text': f"<b>Household consumption before and after retirement <br> under alternative scenarios (in 2020 $)</b>",
+                    title={'text': f"<b>Household income available for spending before and after retirement <br> under alternative scenarios (in 2020 $)</b>",
                             'x': 0.5,
                             'xanchor': 'center',
                             'yanchor': 'top'},
-                    xaxis_title="Before retirement",
+                    xaxis_title=f"Before retirement<br>(year when respondent is {age_respondent} y.o.)",
                     xaxis_tickformat=",",
                     yaxis_title="After retirement",
                     yaxis_tickformat=",",
-                    font=dict(family="Courier New, monospace",
-                                size=14,
-                                color="RebeccaPurple"))
+                    font=dict(size=14, color="Black"))
     st.text("")
     st.text("")
     st.text("")
@@ -502,15 +551,14 @@ def show_plot_button(df):
     st.plotly_chart(fig)
     with st.beta_expander("HOW TO READ THIS FIGURE"):
         st.markdown("""
-            * This figure shows consumption possibilities before retirement (at age 55 or the year before retirement, if earlier, but no sooner than 2020) and after (at age 65 or in the retirement year, if later), for the main realization of the stochastic processes for earnings and investment returns (the deterministic case).
-            * The two dashed lines show where dots would lie for a “consumption replacement rate”of 80% and 65%, respectively, two thresholds used in the RSI’s June 2020 report as well as in previous research and policy literature.
+            * This figure shows household income available for spending before retirement and after, for the main realization of the stochastic processes for earnings and asset/investment returns (the deterministic case – which differs from the mean of the 25 stochastic realizations in Figure 1). “Before retirement” is defined as the year when the first spouse to retire is age 55, or the year before he/she retires if earlier — but no sooner than 2020. “After retirement” is defined as the year when the the last spouse to retire is age 65, or his/her retirement year if later.
+            * The two dashed lines show where dots would lie for the two selected “replacement rates”.
             * The other 4 points shown in the figure illustrate the effect of alternative actions for you:
                 * retiring 2 years later than you indicated;
                 * retiring 2 years earlier then you indicated;
                 * contributing to an <div class="tooltip">RRSP<span class="tooltiptext">Registered Retirement Savings Plans</span></div> 5% more of your earnings than you indicated;
                 * contributing to an <div class="tooltip">RRSP<span class="tooltiptext">Registered Retirement Savings Plans</span></div> 10% more of your earnings than you indicated.""", unsafe_allow_html=True)
 
-    
     # Income decomposition
     # prepare data
     hhold = df_change.loc[0, :]
@@ -536,9 +584,9 @@ def show_plot_button(df):
         business_dividends += hhold['s_business_dividends_after']
     income = oas + gis + cpp + rpp_db + annuity + pension
 
-    label = ['Income', # 0
-            'OAS', 'GIS', 'CPP', 'RPP DB', 'Annuity', 'Pension', 'Business dividends', # 1 to 7
-            'Consumption', 'Imputed rent', 'Debt payments', # 8 - 10
+    label = ['', # 0
+            'OAS', 'GIS', 'CPP/QPP', 'Future pension from DB plan', 'Annuity', 'Current pension', 'Business dividends', # 1 to 7
+            'Income available for spending', 'Imputed rent', 'Debt payments', # 8 - 10
             'Net tax liability']  # 11 could also enter income (invert source and target)
 
     if net_liabilities > 0:
@@ -551,6 +599,8 @@ def show_plot_button(df):
         target = [0, 0, 0, 0, 0, 0, 0, 8, 9, 10, 0]
         value =  [oas, gis, cpp, rpp_db, annuity, pension, business_dividends,
                   consumption, imputed_rent, debt_payments, -net_liabilities]
+    
+    color_nodes = px.colors.qualitative.Safe[:len(source)]
 
     # data to dict, dict to sankey
     link = dict(source = source,
@@ -558,7 +608,8 @@ def show_plot_button(df):
                 value = value,
                 hovertemplate='$%{value:,.0f}<extra></extra>')
     node = dict(label = label, pad=20, thickness=50,
-                hovertemplate='$%{value:,.0f}<extra></extra>')
+                hovertemplate='$%{value:,.0f}<extra></extra>',
+                color=color_nodes)
 
     data = go.Sankey(link=link, node=node)
     # plot
@@ -569,7 +620,8 @@ def show_plot_button(df):
                'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
         xaxis_title="Before retirement", xaxis_tickformat=",",
         yaxis_title="After retirement", yaxis_tickformat=",",
-        font=dict(family="Courier New, monospace", size=14, color="RebeccaPurple"))
+        font=dict(size=14, color="Black"))
+
     st.text("")
     st.text("")
     st.text("")
@@ -580,7 +632,7 @@ def show_plot_button(df):
             * This figure shows the decomposition of your household’s income in retirement:
                 * on the left are the various income sources, including the annuity purchased upon retirement with all your financial wealth;
                 * and on the right are the uses of that income.
-            * For homeowners who choose to sell their home at retirement, this includes a “rent equivalent”, to account for the fact that no rent had to be paid prior to retirement and make consumption possibilities comparable.
+            * For homeowners who choose to sell their home at retirement, this includes a “rent equivalent”, to account for the fact that no rent had to be paid prior to retirement and make incomes available for spending comparable.
             * In certain cases, “Net tax liability” will appear as an income source because it is negative – i.e., the household has more credits and deductions than it has taxes to pay.""", unsafe_allow_html=True)
         
 # SCRIPT INTERFACE
@@ -607,61 +659,53 @@ mean_returns = {'mu_equity': 0.0688,
                 'mu_business': 0.0688,
                 'mu_price_rent': 15}
 
-def change_mean_returns(mean_returns):
-    st.markdown("# Financial assumptions")
-    st.markdown("Use [default assumptions](https://ire.hec.ca/wp-content/uploads/2021/03/assumptions.pdf) regarding future asset/investment returns?")
-    keep_returns = st.radio(
-        "", 
-        ["Yes", "No"], index=0)
-    if keep_returns == 'No':
-        st.write("Long-term mean...")
-        for key, val in mean_returns.items():
-            if key != 'mu_price_rent':
-                mean_returns[key] = st.slider(
-                    f'... annual real return on {key[3:]} (in %)', min_value=0.0, max_value=10.0,
-                    step=1.0, key="long_term_returns_"+key[3:], value=100 * val,
-                    help="Nominal returns are used in the simulator for taxation purposes. We assume a 2% annual future inflation rate.") / 100.0
-            
-        mean_returns['mu_price_rent'] = st.slider(
-                f'... price-rent ratio', min_value=0.0, max_value=30.0,
-                step=1.0, key="long_term_price_rent",
-                value=float(mean_returns['mu_price_rent']))
+# consumption replacement rates
+replace_rate_cons = {'high': 80, 'low': 65}
 
-st.markdown(f"""<style>
-    .reportview-container .main .block-container{{
-    max-width: 1280px;
-    padding-top: 0em;
-    }}</style>""", unsafe_allow_html=True)
+# db pension rate by default
+others = {'perc_year_db': 0.02}
+    
+
+st.markdown(f"""
+    <style>
+        .reportview-container .main .block-container{{
+            max-width: 1280px;
+            padding-top: 0em;
+        }}
+    </style>
+    """, unsafe_allow_html=True)
 
 st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
 
-st.markdown(f"""<style>
-    .tooltip {{
-    position: relative;
-    display: inline-block;
-    border-bottom: 1px dotted black;
-    }}
-    .tooltip .tooltiptext {{
-    visibility: hidden;
-    width: 120px;
-    background-color: black;
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px 0;
-
-    /* Position the tooltip */
-    position: absolute;
-    z-index: 1;
-    top: 100%;
-    left: 50%;
-    margin-left: -60px;
-    }}
-
-    .tooltip:hover .tooltiptext {{
-    visibility: visible;
-    }}
-    </style>""", unsafe_allow_html=True)
+st.markdown(f"""
+    <style>
+        .tooltip {{
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted black;
+        }}
+        
+        .tooltip .tooltiptext {{
+            visibility: hidden;
+            width: 120px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            /* Position the tooltip */
+            position: absolute;
+            z-index: 1;
+            top: 100%;
+            left: 50%;
+            margin-left: -60px;
+        }}
+        
+        .tooltip:hover .tooltiptext {{
+            visibility: visible;
+        }}
+    </style>
+    """, unsafe_allow_html=True)
 
 logo1, _, logo2 = st.beta_columns([0.2, 0.6, 0.2])
 with logo1:
@@ -674,30 +718,26 @@ with logo2:
 st.markdown("<h1 style='text-align: center;font-size: 40px'>Canadians’ Preparation for Retirement (CPR)</h1>", unsafe_allow_html=True)
 st.text("")
 st.text("")
-col1, col2 = st.beta_columns(2)
+col1, col2 = st.beta_columns([0.5, 0.5])
 with col1:
-    with st.beta_expander("Use of the tool"):
-        st.markdown("Welcome to the individual online interface of [the CPR simulator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), [a freely available Python package](https://rsi-models.github.io/CPR/en/) also available for download for batch use. This tool is intended for use by individuals born in 1957 or later and not yet retired. To use the tool, fill in the fields and hit “Show figures” at the bottom of the page. *Your data is anonymous, only used for calculations, and is never stored; further, its transmission is encrypted.*")
+    with st.beta_expander("Use of the tool", expanded=True):
+        st.markdown("Welcome to the individual online interface of [the CPR simulator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), [a freely available Python package](https://rsi-models.github.io/CPR/en/) also available for download for batch use. This tool is intended for use by individuals born in 1957 or later and not yet retired. To use the tool, fill in the fields and hit “Show figures” at the bottom of the page. *The information you enter will not be stored. Il will be transmitted securely and for calculations only. The CPR calculator will not have access to any personal information.*")
+
 with col2:
-    with st.beta_expander("Functioning of the tool"):
-        st.markdown("""The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div> projects a household’s financial situation into the future using [a number of processes and hypotheses](https://ire.hec.ca/wp-content/uploads/2021/03/assumptions.pdf) to a pre-specified age of retirement for each individual. At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for consumption – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. It returns, in the form of figures, the pre- and post-retirement financial situation, as well as a decomposition of income in retirement.""", unsafe_allow_html=True)
+    with st.beta_expander("Functioning of the tool", expanded=True):
+        st.markdown("""
+            The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div>
+            projects a household’s financial situation into the future to a pre-specified age of retirement for each individual, using a number of processes and assumptions [summarized here](https://ire.hec.ca/wp-content/uploads/2021/03/assumptions.pdf) and [graphically depicted here](https://ire.hec.ca/wp-content/uploads/2021/03/CPR_flow5.pdf). At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for spending – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. 
+            It returns, in the form of figures and probabilities, information about the household’s post-retirement financial situation.
+            """, unsafe_allow_html=True)
 
-st.sidebar.markdown("# DISCLAIMER")
-st.sidebar.markdown("This tool uses the freely available [Canadians' Preparation for Retirement (CPR) calculator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), \
-    developed by a team at [HEC Montréal](https://www.hec.ca/en/)’s [Retirement and Savings Institute](https://ire.hec.ca/en/) with financial support from the \
-    [Global Risk Institute](https://globalriskinstitute.org/)’s [National Pension Hub](https://globalriskinstitute.org/national-pension-hub/).")
-st.sidebar.markdown("It is provided “as is” for personal use only, without any warranty regarding its accuracy, appropriateness, completeness or any other quality.")
-st.sidebar.markdown("Its results are deemed to be general information on retirement preparation and should not be construed as financial advice; qualified financial advice should be sought before making any financial decision based on this tool.")
-st.sidebar.markdown("Use of the tool implies the acceptance of the foregoing terms and constitutes an acknowledgement that this disclaimer has been read and understood.")
 
-with st.beta_container():
-    st.text("")
-    st.text("")
-    colt, _ = st.beta_columns([0.56, 0.44])
-    with colt:
-        st.success("**To change the background colour:** On top right corner, click on ☰ ➡️ Settings ➡️ Theme and select *Light/Dark*.")
-    st.text("")
-    st.text("")
+st.sidebar.markdown("# TERMS OF USE")
+st.sidebar.markdown("""This tool uses the freely available [Canadians' Preparation for Retirement (CPR) calculator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), developed by a team at [HEC Montréal](https://www.hec.ca/en/)’s [Retirement and Savings Institute](https://ire.hec.ca/en/) with financial support from the [Global Risk Institute](https://globalriskinstitute.org/)’s [National Pension Hub](https://globalriskinstitute.org/national-pension-hub/).""")
+st.sidebar.markdown("The tool is provided “as is” for personal use only, without any warranty regarding its accuracy, appropriateness, completeness or any other quality. Its results are deemed to be general information on retirement preparation and should not be construed as financial advice; qualified financial advice should be sought before making any financial decision based on this tool.")
+st.sidebar.markdown("Use of the tool implies the acceptance of the foregoing terms and constitutes an acknowledgement that the disclaimer below has been read and understood.")
+with st.sidebar.beta_expander("DISCLAIMER"):
+    st.markdown("Under no circumstances shall the developing team or HEC Montréal, including its employees, officers or directors, be liable for any damages, including without limitation direct, indirect, punitive, incidental, special or consequential damages that result from the use of, or inability to use, the tool or from information provided on the site or from any failure of performance, error, omission, interruption, deletion, defect, delay in operation or transmission, computer virus, communication line failure, theft or destruction or unauthorized access to, alteration of, or use of record.")
 
 col_p1, _, col_p2 = st.beta_columns([0.465, 0.025, 0.51])
 
@@ -718,17 +758,36 @@ with col_p1:
         s_fin_acc_cols = ['s_' + col for col in fin_acc_cols]
         fin_acc_cols += s_fin_acc_cols
     df[fin_acc_cols] = df[fin_acc_cols].fillna(0)
-
+    change_replace_rate_cons()
+    
 with col_p2:
-    if st.button("Update figures", False, help="Click here to update the simulation results"):
+    st.text("")
+    st.text("")
+    if st.button("UPDATE FIGURES", False, help="Click here to update the simulation results"):
         st.markdown("# Simulation results")
         show_plot_button(df)
         st.text("")
         st.text("")
 
-if st.button("Show figures (see top of page)", False, help="Click here to see the simulation results"):
+if st.button("SHOW FIGURES (below or at top of page)", False, help="Click here to see the simulation results"):
     with col_p2:
         st.markdown("# Simulation results")
         show_plot_button(df)
         st.text("")
         st.text("")
+        
+st.text("")
+st.text("")       
+st.text("")
+st.text("")
+st.text("")
+st.text("")
+_, col, _ = st.beta_columns([0.2, 0.6, 0.2])
+
+with col:
+    st.markdown(
+    """<a style='display: block; text-align: center;' href="mailto:info.rsi@hec.ca?subject=CPR Online">Contact</a>
+    """, unsafe_allow_html=True)
+    st.markdown(
+        "<body style='text-align: center; black: red;'>© 2021 Retirement and Savings Institute, HEC Montréal. All rights reserved.</body>",
+        unsafe_allow_html=True)
