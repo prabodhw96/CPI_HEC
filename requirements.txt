@@ -7,3 +7,4 @@ numba
 streamlit==0.79
 cpr-rsi
 openpyxl
+xlrd==1.2.0
