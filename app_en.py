@@ -365,7 +365,7 @@ def write():
         saving_plan_select = st.multiselect(
             label="Select one or more account type(s)", options= [v[1] for v in d_accounts.values()],
             key="fin_acc_"+which, 
-            help="* RRSPs include group RRSPs, Voluntary Retirement Savings Plans (VRSPs) and Pooled Registered Pension Plans (PRPPs). \n* Examples of other registered accounts include Locked-in Retirement Accounts (LIRAs) or the locked-in portion of a previous group RRSP.")
+            help="* RRSPs include group RRSPs, Voluntary Retirement Savings Plans (VRSPs) and Pooled Registered Pension Plans (PRPPs). \n* Examples of other registered accounts include Locked-in Retirement Accounts (LIRAs) or the locked-in portion of a previous group RRSP.")
         selected_saving_plans = [key for key, val in d_accounts.items()
                                  if val[1] in saving_plan_select]
         
