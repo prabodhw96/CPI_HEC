@@ -91,8 +91,8 @@ def write():
         female = (d['sex'] == 'female')
 
         age = 2020 - d['byear']
-        d['ret_age'] = st.number_input("Intended retirement age", min_value=age+1,
-                                       key="ret_age_"+which, value=max(age + 1, 65))    
+        d['ret_age'] = st.number_input("Intended retirement age", min_value=int(age)+1, max_value=70,
+                                       key="ret_age_"+which, value=max(age + 1, 65), step=1)    
         
         d['claim_age_cpp'] = min(d['ret_age'], 70)
         st.markdown("""
@@ -574,7 +574,7 @@ def write():
         
         st.plotly_chart(fig)
 
-        with st.beta_expander("HOW TO READ THIS FIGURE"):
+        with st.expander("HOW TO READ THIS FIGURE"):
             st.markdown("""
                 * This figure shows 25 “realizations”, or possibilities of household income available for spending after retirement, with their average. “After retirement” is defined as the year when the the last spouse to retire is age 65, or his/her retirement year if later.
                 * Variations in income available for spending are driven by the stochastic processes for earnings and asset/investment returns.
@@ -647,7 +647,7 @@ def write():
         st.text("")
         st.text("")
         st.plotly_chart(fig)
-        with st.beta_expander("HOW TO READ THIS FIGURE"):
+        with st.expander("HOW TO READ THIS FIGURE"):
             st.markdown("""
                 * This figure shows household income available for spending before retirement and after, for the main realization of the stochastic processes for earnings and asset/investment returns (the deterministic case – which differs from the mean of the 25 stochastic realizations in Figure 1). “Before retirement” is defined as the year when the first spouse to retire is age 55, or the year before he/she retires if earlier — but no sooner than 2020. “After retirement” is defined as the year when the last spouse to retire is age 65, or his/her retirement year if later.
                 * The two dashed lines show where dots would lie for the two selected “replacement rates”.
@@ -735,7 +735,7 @@ def write():
         st.text("")
         st.text("")
         st.plotly_chart(fig)
-        with st.beta_expander("HOW TO READ THIS FIGURE"):
+        with st.expander("HOW TO READ THIS FIGURE"):
             st.markdown("""
                 * This figure shows the decomposition of your household’s income in retirement:
                     * on the left are the various income sources, including the annuity purchased upon retirement with all your financial wealth;
@@ -779,7 +779,7 @@ def write():
 
 
     # load logos
-    logo1, _, logo2 = st.beta_columns([0.2, 0.6, 0.2])
+    logo1, _, logo2 = st.columns([0.2, 0.6, 0.2])
     with logo1:
         rsi = Image.open("app_files/RSI.png")
         st.image(rsi)
@@ -790,16 +790,15 @@ def write():
     st.markdown("<center><h1 style='font-size: 40px'>Canadians’ Preparation for Retirement (CPR)</h1></center>", unsafe_allow_html=True)
     st.text("")
     st.text("")
-    col1, col2 = st.beta_columns([0.5, 0.5])
+    col1, col2 = st.columns([0.5, 0.5])
     with col1:
-        with st.beta_expander("Use of the tool", expanded=True):
+        with st.expander("Use of the tool", expanded=True):
             st.markdown("Welcome to the individual online interface of [the CPR calculator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), [a freely available Python package](https://rsi-models.github.io/CPR/en/) also available for download for batch use. This tool is intended for use by individuals born in 1957 or later and not yet retired. To use the tool, fill in the fields and hit “Show figures” at the bottom of the page. *The information you enter will not be stored. It will be transmitted securely and for calculations only. The CPR calculator will not have access to any personal information.*")
 
     with col2:
-        with st.beta_expander("Functioning of the tool", expanded=True):
+        with st.expander("Functioning of the tool", expanded=True):
             st.markdown("""
-                The <div class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></div>
-                projects a household’s financial situation into the future to a pre-specified age of retirement for each individual, using a number of processes and assumptions [summarized here](https://ire.hec.ca/wp-content/uploads/2021/05/assumptions.pdf) and [graphically depicted here](https://ire.hec.ca/wp-content/uploads/2021/03/CPR_flow5.pdf). At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for spending – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. 
+                The CPR projects a household’s financial situation into the future to a pre-specified age of retirement for each individual, using a number of processes and assumptions [summarized here](https://ire.hec.ca/wp-content/uploads/2021/05/assumptions.pdf) and [graphically depicted here](https://ire.hec.ca/wp-content/uploads/2021/03/CPR_flow5.pdf). At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for spending – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. 
                 It returns, in the form of figures and probabilities, information about the household’s post-retirement financial situation.
                 """, unsafe_allow_html=True)
 
@@ -808,10 +807,10 @@ def write():
     st.sidebar.markdown("""This tool uses the freely available [Canadians' Preparation for Retirement (CPR) calculator](https://ire.hec.ca/en/canadians-preparation-retirement-cpr), developed by a team at [HEC Montréal](https://www.hec.ca/en/)’s [Retirement and Savings Institute](https://ire.hec.ca/en/) with financial support from the [Global Risk Institute](https://globalriskinstitute.org/)’s [National Pension Hub](https://globalriskinstitute.org/national-pension-hub/).""")
     st.sidebar.markdown("The tool is provided “as is” for personal use only, without any warranty regarding its accuracy, appropriateness, completeness or any other quality. Its results are deemed to be general information on retirement preparation and should not be construed as financial advice; qualified financial advice should be sought before making any financial decision based on this tool.")
     st.sidebar.markdown("Use of the tool implies the acceptance of the foregoing terms and constitutes an acknowledgement that the disclaimer below has been read and understood.")
-    with st.sidebar.beta_expander("DISCLAIMER"):
+    with st.sidebar.expander("DISCLAIMER"):
         st.markdown("Under no circumstances shall the developing team or HEC Montréal, including its employees, officers or directors, be liable for any damages, including without limitation direct, indirect, punitive, incidental, special or consequential damages that result from the use of, or inability to use, the tool or from information provided on the site or from any failure of performance, error, omission, interruption, deletion, defect, delay in operation or transmission, computer virus, communication line failure, theft or destruction or unauthorized access to, alteration of, or use of record.")
 
-    col_p1, _, col_p2 = st.beta_columns([0.465, 0.025, 0.51])
+    col_p1, _, col_p2 = st.columns([0.465, 0.025, 0.51])
 
     with col_p1:
         change_mean_returns(mean_returns)
@@ -835,13 +834,13 @@ def write():
     with col_p2:
         st.text("")
         st.text("")
-        if st.button("SEE OR UPDATE FIGURES", False, help="Click here to update the simulation results"):
+        if st.button("SEE OR UPDATE FIGURES", key="fig", disabled=False, help="Click here to update the simulation results"):
             st.markdown("# Simulation results")
             show_plot_button(df)
             st.text("")
             st.text("")
 
-    if st.button("SEE OR UPDATE FIGURES (higher up)", False, help="Click here to see the simulation results"):
+    if st.button("SEE OR UPDATE FIGURES (higher up)", key="fig_h", disabled=False, help="Click here to see the simulation results"):
         with col_p2:
             st.markdown("# Simulation results")
             show_plot_button(df)
@@ -854,7 +853,7 @@ def write():
     st.text("")
     st.text("")
     st.text("")
-    _, col, _ = st.beta_columns([0.2, 0.6, 0.2])
+    _, col, _ = st.columns([0.2, 0.6, 0.2])
 
     with col:
         st.markdown(

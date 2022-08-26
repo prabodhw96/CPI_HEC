@@ -1,7 +1,7 @@
 import streamlit as st
 import awesome_streamlit as ast
 
-st.set_page_config(page_title="CPR", initial_sidebar_state="expanded")
+st.set_page_config(page_title="CPR", initial_sidebar_state="expanded", layout="wide")
 
 import app_en
 import app_fr
@@ -9,10 +9,11 @@ import app_fr
 
 st.markdown(f"""
     <style>
-        .reportview-container .main .block-container{{
-            max-width: 1280px;
-            padding-top: 0em;
-        }}
+    .appview-container .main .block-container{{
+    padding-top: {0}em;
+    padding-left: {1}em;
+    padding-right: {1}em;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -46,6 +47,16 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
+st.markdown(
+    """
+    <style>
+    .streamlit-expanderHeader {
+    font-size: 16px;
+    font-weight: 600;
+    }
+    </style>""", unsafe_allow_html=True)
+
+
 # hide the hamburger button top-right of the screen
 st.markdown("""
     <style>
@@ -53,6 +64,11 @@ st.markdown("""
     </style>""", unsafe_allow_html=True)
 
 st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
+
+st.markdown("""
+    <style>
+        div.block-container {padding-top:0rem;}
+    </style>""", unsafe_allow_html=True)
 
 PAGES = {"Français": app_fr, "English": app_en}
 

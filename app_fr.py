@@ -94,7 +94,7 @@ def write():
         female = (d['sex'] == 'female')
 
         age = 2020 - d['byear']
-        d['ret_age'] = st.number_input("Âge de retraite prévu", min_value=age+1,
+        d['ret_age'] = st.number_input("Âge de retraite prévu", min_value=int(age)+1, max_value=70,
                                        key="ret_age_"+which, value=max(age + 1, 65))    
         
         d['claim_age_cpp'] = min(d['ret_age'], 70)
@@ -578,7 +578,7 @@ def write():
         
         st.plotly_chart(fig)
 
-        with st.beta_expander("COMMENT LIRE CETTE FIGURE"):
+        with st.expander("COMMENT LIRE CETTE FIGURE"):
             st.markdown("""
                 * Cette figure montre 25 « réalisations », ou possibilités, quant au revenu disponible pour les dépenses après la retraite, avec leur moyenne.
                 * Les variations du revenu disponible pour les dépenses sont causées par les processus stochastiques de projection des revenus de travail et des rendements sur les actifs / placements.
@@ -651,7 +651,7 @@ def write():
         st.text("")
         st.text("")
         st.plotly_chart(fig)
-        with st.beta_expander("COMMENT LIRE CETTE FIGURE"):
+        with st.expander("COMMENT LIRE CETTE FIGURE"):
             st.markdown("""
                 * Cette figure montre le revenu disponible pour les dépenses du ménage avant et après la retraite, pour la réalisation principale des processus stochastiques pour les revenus de travail et les rendements sur les actifs / placements (le cas déterministe – qui diffère de la moyenne des 25 réalisations de la Figure 1). « Avant la retraite » réfère à l’année où le premier conjoint à prendre sa retraite a 55 ans, ou l’année avant sa retraite si celle-ci survient plus tôt – mais cette année ne peut jamais être antérieure à 2020. « Après la retraite » réfère à l’année dans laquelle le dernier conjoint à prendre sa retraite a 65 ans, ou l’année de sa retraite  si celle-ci survient plus tard.
                 * Les deux lignes pointillées montrent où les points se situeraient pour les deux « taux de remplacement ».
@@ -741,7 +741,7 @@ def write():
         st.text("")
         st.text("")
         st.plotly_chart(fig)
-        with st.beta_expander("COMMENT LIRE CETTE FIGURE"):
+        with st.expander("COMMENT LIRE CETTE FIGURE"):
             st.markdown("""
                 * Cette figure montre la décomposition du revenu à la retraite de votre ménage :
                     * À gauche se trouvent les différentes sources de revenu, y compris la rente viagère achetée à la retraite avec tout votre patrimoine financier; et
@@ -788,7 +788,7 @@ def write():
 
 
     # load logos
-    logo1, _, logo2 = st.beta_columns([0.2, 0.6, 0.2])
+    logo1, _, logo2 = st.columns([0.2, 0.6, 0.2])
     with logo1:
         rsi = Image.open("app_files/IRE.png")
         st.image(rsi)   
@@ -799,13 +799,13 @@ def write():
     st.markdown("<center><h1 style='font-size: 40px'>Préparation à la retraite des Canadiens (CPR)</h1></center>", unsafe_allow_html=True)
     st.text("")
     st.text("")
-    col1, col2 = st.beta_columns([0.5, 0.5])
+    col1, col2 = st.columns([0.5, 0.5])
     with col1:
-        with st.beta_expander("Utilisation de l'outil", expanded=True):
+        with st.expander("Utilisation de l'outil", expanded=True):
             st.markdown("Bienvenue dans l’interface individuelle en ligne du [calculateur CPR](https://ire.hec.ca/preparation-retraite-canadiens/), un package Python disponible en ligne gratuitement pour une utilisation en lot (pour plusieurs ménages à la fois). Cet outil s’adresse aux individus non-retraités nés en 1957 ou après. Pour utiliser l’outil, remplir les champs et cliquer sur « Montrer les figures » au bas de la page. *L’information entrée ne sera pas conservée. Elle sera transmise de façon sécuritaire à des fins de calcul uniquement. Le calculateur CPR n’aura accès à aucune information personnelle.*")
 
     with col2:
-        with st.beta_expander("Fonctionnement de l'outil", expanded=True):
+        with st.expander("Fonctionnement de l'outil", expanded=True):
             st.markdown("""
                 En utilisant de nombreux processus et hypothèses [résumés ici](https://ire.hec.ca/wp-content/uploads/2021/05/assumptions-fr.pdf) et [présentés graphiquement ici](https://ire.hec.ca/wp-content/uploads/2021/04/CPR_flow5-fr.pdf), le CPR projette dans le futur la situation financière d’un ménage, jusqu’à un âge de retraite prédéterminé pour chaque individu. À cet âge, il convertit tout le patrimoine financier (et si désiré les résidences et entreprises) en une rente viagère « actuariellement juste », à l’aide des tables de mortalité les plus récentes et des taux projetés sur les obligations. L’outil calcule le revenu disponible pour les dépenses – après paiement des dettes, épargne, impôts, et logement pour les propriétaires – *avant* et *après* la retraite, en dollars de 2020 (réels). Il fournit ensuite de l’information au sujet de la situation financière du ménage après la retraite à l’aide de figures et de probabilités.
                 """, unsafe_allow_html=True)
@@ -817,10 +817,10 @@ def write():
     
     st.sidebar.markdown("L’outil est fourni « tel quel » et pour usage personnel uniquement, sans garantie aucune quant à son exactitude, à son caractère approprié ou exhaustif ou à toute autre qualité. Ses résultats constituent de l’information générale sur la préparation à la retraite et ne devraient pas être considérés comme des conseils financiers; on devrait obtenir du conseil financier qualifié avant de prendre toute décision financière sur la base de cet outil.")
     st.sidebar.markdown("L’utilisation de l’outil implique l’acceptation des conditions d’utilisation ci-dessus ainsi que la prise de connaissance et la compréhension de la décharge de responsabilité ci-après.")
-    with st.sidebar.beta_expander("DÉCHARGE DE RESPONSABILITÉ"):
+    with st.sidebar.expander("DÉCHARGE DE RESPONSABILITÉ"):
         st.markdown("L’équipe de développement ou HEC Montréal, y compris ses employés, dirigeants ou administrateurs, ne peuvent en aucun cas être tenus responsables pour tout dommage, incluant – sans s’y limiter – les dommages directs, indirects, punitifs, connexes, spéciaux ou consécutifs résultant de l’utilisation ou de l’impossibilité d’utiliser l’outil, ou d’information fournie dans le site ou de tout défaut de performance, erreur, omission, interruption, suppression, défaut, délai de fonctionnement ou de transmission, virus informatique, bris de ligne de communication, vol ou destruction ou altération de – ou accès sans autorisation à – notre système.")
 
-    col_p1, _, col_p2 = st.beta_columns([0.465, 0.025, 0.51])
+    col_p1, _, col_p2 = st.columns([0.465, 0.025, 0.51])
 
     with col_p1:
         change_mean_returns(mean_returns)
@@ -844,13 +844,13 @@ def write():
     with col_p2:
         st.text("")
         st.text("")
-        if st.button("VOIR OU METTRE À JOUR LES FIGURES", False, help="Appuyez ici pour mettre à jour les résultats des simulations"):
+        if st.button("VOIR OU METTRE À JOUR LES FIGURES", key="fig", disabled=False, help="Appuyez ici pour mettre à jour les résultats des simulations"):
             st.markdown("# Résultats des simulations")
             show_plot_button(df)
             st.text("")
             st.text("")
 
-    if st.button("VOIR OU METTRE À JOUR LES FIGURES (plus haut)", False, help="Appuyez ici pour voir les résultats des simulations"):
+    if st.button("VOIR OU METTRE À JOUR LES FIGURES (plus haut)", key="fig_h", disabled=False, help="Appuyez ici pour voir les résultats des simulations"):
         with col_p2:
             st.markdown("# Résultats des simulations")
             show_plot_button(df)
@@ -863,7 +863,7 @@ def write():
     st.text("")
     st.text("")
     st.text("")
-    _, col, _ = st.beta_columns([0.2, 0.6, 0.2])
+    _, col, _ = st.columns([0.2, 0.6, 0.2])
 
     with col:
         st.markdown(
