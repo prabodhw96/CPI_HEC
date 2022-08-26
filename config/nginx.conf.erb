@@ -60,6 +60,11 @@ http {
           proxy_set_header Upgrade $http_upgrade;
           proxy_set_header Connection "upgrade";
           proxy_read_timeout 86400;
+          add_header Content-Security-Policy "default-src 'self'; script-src https://static.ads-twitter.com https://www.google-analytics.com 'sha256-q2sY7jlDS4SrxBg6oq/NBYk9XVSwDsterXWpH99SAn0='; img-src 'self' https://s3.amazonaws.com https://twitter.com https://pbs.twimg.com; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com; frame-ancestors 'none';",
+          add_header Referrer-Policy "no-referrer, strict-origin-when-cross-origin",
+          add_header Strict-Transport-Security "max-age=63072000; includeSubDomains",
+          add_header X-Content-Type-Options "nosniff",
+          add_header X-Frame-Options "DENY",
       }
    }
 }
