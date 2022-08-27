@@ -11,8 +11,8 @@ st.markdown(f"""
     <style>
     .appview-container .main .block-container{{
     padding-top: {0}em;
-    padding-left: {1}em;
-    padding-right: {1}em;
+    padding-left: {3}em;
+    padding-right: {3}em;
     }}
     </style>
     """, unsafe_allow_html=True)

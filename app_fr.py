@@ -99,7 +99,7 @@ def write():
         
         d['claim_age_cpp'] = min(d['ret_age'], 70)
         st.markdown("""
-            L’âge de début du <div class="tooltip">RPC<span class="tooltiptext">Régime de pensions du Canada</span></div> / <div class="tooltip">RRQ<span class="tooltiptext">Régime de rentes du Québec</span></div> est fixé à l’âge de retraite que vous avez entré ci-dessus, avec un minimum de 60 ans et un maximum de 70 ans. Les prestations de <div class="tooltip">PSV<span class="tooltiptext">Pension de Sécurité de la vieillesse</span></div> / <div class="tooltip">SRG<span class="tooltiptext">Supplément de revenu garanti</span></div> débutent à 65 ans, tandis que l’Allocation au conjoint est versée de 60 à 64&nbsp;ans inclusivement.        
+            L’âge de début du <span class="tooltip">RPC<span class="tooltiptext">Régime de pensions du Canada</span></span> / <span class="tooltip">RRQ<span class="tooltiptext">Régime de rentes du Québec</span></span> est fixé à l’âge de retraite que vous avez entré ci-dessus, avec un minimum de 60 ans et un maximum de 70 ans. Les prestations de <span class="tooltip">PSV<span class="tooltiptext">Pension de Sécurité de la vieillesse</span></span> / <span class="tooltip">SRG<span class="tooltiptext">Supplément de revenu garanti</span></span> débutent à 65 ans, tandis que l’Allocation au conjoint est versée de 60 à 64&nbsp;ans inclusivement.        
             """, unsafe_allow_html=True)
         st.text("")
 
@@ -508,7 +508,7 @@ def write():
     def change_replace_rate_cons():
         st.markdown("# Taux de remplacement") 
         st.markdown("""
-            Le caractère adéquat du revenu à la retraite est souvent évalué en termes de «&nbsp;taux de remplacement de la consommation&nbsp;». Dans le cas du revenu disponible pour les dépenses (c.-à-d. net des impôts, épargnes et paiement des dettes), des seuils de 80% et 65% ont été utilisés dans le [rapport de juin 2020](https://ire.hec.ca/preparation-retraite-canadiens/) produit par l’<div class=tooltip>IRE<span class=tooltiptext>Institut sur la retraite et l’épargne</span></div>, ainsi que dans des recherches et des études de politiques antérieures. Utiliser ces seuils comme références dans les figures de résultats?
+            Le caractère adéquat du revenu à la retraite est souvent évalué en termes de «&nbsp;taux de remplacement de la consommation&nbsp;». Dans le cas du revenu disponible pour les dépenses (c.-à-d. net des impôts, épargnes et paiement des dettes), des seuils de 80% et 65% ont été utilisés dans le [rapport de juin 2020](https://ire.hec.ca/preparation-retraite-canadiens/) produit par l’<span class=tooltip>IRE<span class=tooltiptext>Institut sur la retraite et l’épargne</span></span>, ainsi que dans des recherches et des études de politiques antérieures. Utiliser ces seuils comme références dans les figures de résultats?
             """, unsafe_allow_html=True)
         
         keep_rri = st.radio("", ["Oui", "Non"], key='keep_rri', index=0)
@@ -656,8 +656,8 @@ def write():
                 * Cette figure montre le revenu disponible pour les dépenses du ménage avant et après la retraite, pour la réalisation principale des processus stochastiques pour les revenus de travail et les rendements sur les actifs / placements (le cas déterministe – qui diffère de la moyenne des 25 réalisations de la Figure 1). « Avant la retraite » réfère à l’année où le premier conjoint à prendre sa retraite a 55 ans, ou l’année avant sa retraite si celle-ci survient plus tôt – mais cette année ne peut jamais être antérieure à 2020. « Après la retraite » réfère à l’année dans laquelle le dernier conjoint à prendre sa retraite a 65 ans, ou l’année de sa retraite  si celle-ci survient plus tard.
                 * Les deux lignes pointillées montrent où les points se situeraient pour les deux « taux de remplacement ».
                 * Les 4 autres points montrés dans la figure illustrent l’effet de stratégies alternatives pour vous :
-                    * cotiser à un <div class="tooltip">REER<span class="tooltiptext">« Régime enregistré d’épargne retraite »</span></div> 5% de votre revenu de travail de plus que ce que vous avez indiqué;
-                    * cotiser à un <div class="tooltip">REER<span class="tooltiptext">« Régime enregistré d’épargne retraite »</span></div> 10% de votre revenu de travail de plus que ce que vous avez indiqué;
+                    * cotiser à un <span class="tooltip">REER<span class="tooltiptext">« Régime enregistré d’épargne retraite »</span></span> 5% de votre revenu de travail de plus que ce que vous avez indiqué;
+                    * cotiser à un <span class="tooltip">REER<span class="tooltiptext">« Régime enregistré d’épargne retraite »</span></span> 10% de votre revenu de travail de plus que ce que vous avez indiqué;
                     * prendre votre retraite 2 ans plus tôt que ce que vous avez indiqué;
                     * prendre votre retraite 2 ans plus tard que ce que vous avez indiqué.
                     """, unsafe_allow_html=True) 
@@ -807,7 +807,7 @@ def write():
     with col2:
         with st.expander("Fonctionnement de l'outil", expanded=True):
             st.markdown("""
-                En utilisant de nombreux processus et hypothèses [résumés ici](https://ire.hec.ca/wp-content/uploads/2021/05/assumptions-fr.pdf) et [présentés graphiquement ici](https://ire.hec.ca/wp-content/uploads/2021/04/CPR_flow5-fr.pdf), le CPR projette dans le futur la situation financière d’un ménage, jusqu’à un âge de retraite prédéterminé pour chaque individu. À cet âge, il convertit tout le patrimoine financier (et si désiré les résidences et entreprises) en une rente viagère « actuariellement juste », à l’aide des tables de mortalité les plus récentes et des taux projetés sur les obligations. L’outil calcule le revenu disponible pour les dépenses – après paiement des dettes, épargne, impôts, et logement pour les propriétaires – *avant* et *après* la retraite, en dollars de 2020 (réels). Il fournit ensuite de l’information au sujet de la situation financière du ménage après la retraite à l’aide de figures et de probabilités.
+                En utilisant de nombreux processus et hypothèses [résumés ici](https://ire.hec.ca/wp-content/uploads/2021/05/assumptions-fr.pdf) et [présentés graphiquement ici](https://ire.hec.ca/wp-content/uploads/2021/04/CPR_flow5-fr.pdf), le <span class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></span> projette dans le futur la situation financière d’un ménage, jusqu’à un âge de retraite prédéterminé pour chaque individu. À cet âge, il convertit tout le patrimoine financier (et si désiré les résidences et entreprises) en une rente viagère « actuariellement juste », à l’aide des tables de mortalité les plus récentes et des taux projetés sur les obligations. L’outil calcule le revenu disponible pour les dépenses – après paiement des dettes, épargne, impôts, et logement pour les propriétaires – *avant* et *après* la retraite, en dollars de 2020 (réels). Il fournit ensuite de l’information au sujet de la situation financière du ménage après la retraite à l’aide de figures et de probabilités.
                 """, unsafe_allow_html=True)
 
     st.sidebar.markdown("# CONDITIONS D'UTILISATION")

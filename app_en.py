@@ -96,13 +96,13 @@ def write():
         
         d['claim_age_cpp'] = min(d['ret_age'], 70)
         st.markdown("""
-            <div class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></div>
+            <span class="tooltip">CPP<span class="tooltiptext">Canada Pension Plan</span></span>
             /
-            <div class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></div>
+            <span class="tooltip">QPP<span class="tooltiptext">Quebec Pension Plan</span></span>
             claim age is set at the retirement age you entered above, but no less than 60&nbsp;y.o. and no more than 70&nbsp;y.o. 
-            <div class="tooltip">OAS<span class="tooltiptext">Old Age Security</span></div>
+            <span class="tooltip">OAS<span class="tooltiptext">Old Age Security</span></span>
             /
-            <div class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></div> benefits begin at 65 y.o., while Spouse Allowance benefits are paid from 60 to 64&nbsp;y.o. inclusively.
+            <span class="tooltip">GIS<span class="tooltiptext">Guaranteed Income Supplement</span></span> benefits begin at 65 y.o., while Spouse Allowance benefits are paid from 60 to 64&nbsp;y.o. inclusively.
             """, unsafe_allow_html=True)
         st.text("")
 
@@ -505,7 +505,7 @@ def write():
     # slider to change replacement rates      
     def change_replace_rate_cons():
         st.markdown("# Replacement rates") 
-        st.markdown("The adequacy of retirement incomes is often assessed using “consumption replacement rates”. In the case of income available for spending (i.e. net of taxes, savings and debt payments), thresholds of 80% and 65% have been used in the <div class=tooltip>RSI<span class=tooltiptext>Retirement and Savings Institute</span></div>’s [June 2020 report](https://ire.hec.ca/en/canadians-preparation-retirement-cpr/) as well as in previous research and policy literature. Use these thresholds as benchmarks in the results figures?", unsafe_allow_html=True)
+        st.markdown("The adequacy of retirement incomes is often assessed using “consumption replacement rates”. In the case of income available for spending (i.e. net of taxes, savings and debt payments), thresholds of 80% and 65% have been used in the <span class=tooltip>RSI<span class=tooltiptext>Retirement and Savings Institute</span></span>’s [June 2020 report](https://ire.hec.ca/en/canadians-preparation-retirement-cpr/) as well as in previous research and policy literature. Use these thresholds as benchmarks in the results figures?", unsafe_allow_html=True)
         
         keep_rri = st.radio("", ["Yes", "No"], key='keep_rri', index=0)
         if keep_rri == 'No':
@@ -654,8 +654,8 @@ def write():
                 * The other 4 points shown in the figure illustrate the effect of alternative actions for you:
                     * retiring 2 years later than you indicated;
                     * retiring 2 years earlier then you indicated;
-                    * contributing to an <div class="tooltip">RRSP<span class="tooltiptext">Registered Retirement Savings Plans</span></div> 5% more of your earnings than you indicated;
-                    * contributing to an <div class="tooltip">RRSP<span class="tooltiptext">Registered Retirement Savings Plans</span></div> 10% more of your earnings than you indicated.""", unsafe_allow_html=True)
+                    * contributing to an <span class="tooltip">RRSP<span class="tooltiptext">Registered Retirement Savings Plans</span></span> 5% more of your earnings than you indicated;
+                    * contributing to an <span class="tooltip">RRSP<span class="tooltiptext">Registered Retirement Savings Plans</span></span> 10% more of your earnings than you indicated.""", unsafe_allow_html=True)
 
         # RETIREMENT INCOME DISTRIBUTION
         # prepare data
@@ -797,8 +797,7 @@ def write():
 
     with col2:
         with st.expander("Functioning of the tool", expanded=True):
-            st.markdown("""
-                The CPR projects a household’s financial situation into the future to a pre-specified age of retirement for each individual, using a number of processes and assumptions [summarized here](https://ire.hec.ca/wp-content/uploads/2021/05/assumptions.pdf) and [graphically depicted here](https://ire.hec.ca/wp-content/uploads/2021/03/CPR_flow5.pdf). At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for spending – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. 
+            st.markdown("""The <span class="tooltip">CPR<span class="tooltiptext">Canadians' Preparation for Retirement</span></span> projects a household’s financial situation into the future to a pre-specified age of retirement for each individual, using a number of processes and assumptions [summarized here](https://ire.hec.ca/wp-content/uploads/2021/05/assumptions.pdf) and [graphically depicted here](https://ire.hec.ca/wp-content/uploads/2021/03/CPR_flow5.pdf). At that age, it converts all financial wealth (and optionally residences and businesses) into an “actuarially fair” annuity, using the most recent life tables as well as projected bond rates. The tool computes income available for spending – after debt payments, saving, taxes, and housing for homeowners – *prior to* and *after* retirement, in 2020 (real) dollars. 
                 It returns, in the form of figures and probabilities, information about the household’s post-retirement financial situation.
                 """, unsafe_allow_html=True)
 
