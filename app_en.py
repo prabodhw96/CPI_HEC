@@ -38,7 +38,7 @@ def write():
                     mean_returns[key] = st.slider(
                         f'... annual real return on {name_returns[key]} (in %)',
                         min_value=0.0, max_value=10.0, step=1.0,
-                        key="long_term_returns_"+key[3:], value=100 * val) / 100.0
+                        key="long_term_returns_"+key, value=100 * val) / 100.0
             
             mean_returns['mu_price_rent'] = st.slider(
                     f'... price-rent ratio', min_value=0.0, max_value=30.0,
@@ -159,7 +159,7 @@ def write():
             age = 2021 - d['byear']
             years_service = st.number_input(
                 'Years of service to date contributing to current DB employer plan',
-                min_value=0, max_value=age - 18, key='year_service_'+which, value=0,
+                min_value=0, max_value=int(age - 18), key='year_service_'+which, value=0,
                 help="The calculator adds to this number the years of service until your intended retirement age, assuming you will keep participating in the same plan, and multiplies this by the pension rate below")
             others['perc_year_db'] = st.slider(
                 'Pension rate (in % of earnings per year of service)',
@@ -233,7 +233,7 @@ def write():
                 step=step_amount, key="business_value")
             
             sell_business = st.radio("Do you plan to sell your business upon retirement?",
-                     ["Yes", "No"], key="business", index=1)
+                     ["Yes", "No"], key="business_sell", index=1)
             if sell_business == 'Yes':
                 user_options['sell_business'] = True
                 d_others['price_business'] = st.number_input(
@@ -298,7 +298,7 @@ def write():
         if which == 'first':
             if sell == 'Yes':
                 downsize= st.radio("Do you plan to downsize upon retirement?", ["Yes", "No"],
-                        key=which+"_sell", index=1)
+                        key=which+"_downsize", index=1)
                 if downsize == 'Yes':
                     user_options['downsize'] = st.number_input(
                         "By what percentage (in value) do you plan to downsize?", value=0, min_value=0,

@@ -40,7 +40,7 @@ def write():
                     mean_returns[key] = st.slider(
                         f'... du rendement annuel réel sur {translate_returns[key]} (en %)',
                         min_value=0.0, max_value=10.0, step=1.0,
-                        key="long_term_returns_"+key[3:], value=100 * val) / 100.0
+                        key="long_term_returns_"+key, value=100 * val) / 100.0
             
             mean_returns['mu_price_rent'] = st.slider(
                     f'... du ratio prix-loyers', min_value=0.0, max_value=30.0,
@@ -148,7 +148,7 @@ def write():
             age = 2021 - d['byear']
             years_service = st.number_input(
                 'Années de service à ce jour avec cotisation au régime d’employeur PD actuel',
-                min_value=0, max_value=age - 18, key='year_service_'+which, value=0,
+                min_value=0, max_value=int(age - 18), key='year_service_'+which, value=0,
                 help="Le calculateur ajoute à ce nombre les années de service jusqu’à l’âge de retraite prévu, en présumant que la personne continuera à participer au même régime; puis multiplie le total par le taux de pension ci-dessous")
             others['perc_year_db'] = st.slider(
                 'Taux de pension (en % du revenu de travail par année de service)',
@@ -230,7 +230,7 @@ def write():
             
             sell_business = st.radio(
                 "Prévoyez-vous vendre votre entreprise au moment de la retraite?",
-                ["Oui", "Non"], key="business", index=1)
+                ["Oui", "Non"], key="business_sell", index=1)
             if sell_business == "Oui":
                 user_options['sell_business'] = True
                 d_others['price_business'] = st.number_input(
@@ -299,7 +299,7 @@ def write():
             if sell == 'Oui':
                 downsize= st.radio("Prévoyez-vous réduire la taille de votre habitation au moment de la retraite?",
                                    ["Oui", "Non"],
-                        key=which+"_sell", index=1)
+                        key=which+"_downsize", index=1)
                 if downsize == 'Oui':
                     user_options['downsize'] = st.number_input(
                         "De quel pourcentage (en valeur)?", value=0, min_value=0,
