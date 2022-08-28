@@ -467,7 +467,7 @@ def write():
             total_fp += d_fin_prod[account+"_"+prod]
 
         if total_fp != balance and len(fin_prod_select)!=0:
-            st.error("Total amount in financial products ({} $) is not equal to amount in this account type ({} $)".format(
+            st.error("Total amount in financial products ({} \\$) is not equal to amount in this account type ({} \\$)".format(
                     format(total_fp, ",d"), format(balance, ",d")))
         return d_fin_prod
 

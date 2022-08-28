@@ -470,7 +470,7 @@ def write():
             total_fp += d_fin_prod[account+"_"+prod]
 
         if total_fp != balance and len(fin_prod_select)!=0:
-            st.error(f"Le montant total dans les produits financiers ({total_fp:,} $) n'est pas égal au montant dans ce type de compte ({balance:,} $)")
+            st.error(f"Le montant total dans les produits financiers ({total_fp:,} \\$) n'est pas égal au montant dans ce type de compte ({balance:,} \\$)")
         return d_fin_prod
 
     def create_dataframe(d_hh):
