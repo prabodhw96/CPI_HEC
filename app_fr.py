@@ -566,10 +566,10 @@ def write():
                         '<extra></extra>')
 
         fig.update_layout(height=250, width=700,
-                        title={'text': f"<b>Revenu du ménage disponible pour les dépenses après la retraite <br> (en $ de 2020, {nsim} réalisations)</b>",
+                        title={'text': f"<b>Revenu du ménage disponible pour les dépenses après <br> la retraite (en $ de 2020, {nsim} réalisations)</b>",
                                 'x': 0.5, 'xanchor': 'center', 'yanchor': 'bottom'},
                         xaxis_tickformat=",",
-                        xaxis_title=f"<b>Probabilité de surpasser les taux de remplacement faible et élevé,<br>respectivement : {pr_low}% et {pr_high}%</b>",
+                        xaxis_title=f"<b>Probabilité de surpasser les taux de remplacement faible <br> et élevé, respectivement : {pr_low}% et {pr_high}%</b>",
                         xaxis_title_font_size=14,
                         xaxis_range=[cons_after.min()-500, cons_after.max()+500],
                         yaxis=dict(range=[0, 2], visible= False, showticklabels=False),
@@ -637,7 +637,7 @@ def write():
             line=dict(color="Green", width=2, dash='dot')))
 
         fig.update_layout(height=500, width=700,
-                        title={'text': f"<b>Revenu du ménage disponible pour les dépenses avant et après la retraite<br>selon différents scénarios (en $ de 2020)</b>",
+                        title={'text': f"<b>Revenu du ménage disponible pour les dépenses avant <br> et après la retraite selon différents scénarios (en $ de 2020)</b>",
                                 'x': 0.5,
                                 'xanchor': 'center',
                                 'yanchor': 'top'},
@@ -820,7 +820,7 @@ def write():
     with st.sidebar.expander("DÉCHARGE DE RESPONSABILITÉ"):
         st.markdown("L’équipe de développement ou HEC Montréal, y compris ses employés, dirigeants ou administrateurs, ne peuvent en aucun cas être tenus responsables pour tout dommage, incluant – sans s’y limiter – les dommages directs, indirects, punitifs, connexes, spéciaux ou consécutifs résultant de l’utilisation ou de l’impossibilité d’utiliser l’outil, ou d’information fournie dans le site ou de tout défaut de performance, erreur, omission, interruption, suppression, défaut, délai de fonctionnement ou de transmission, virus informatique, bris de ligne de communication, vol ou destruction ou altération de – ou accès sans autorisation à – notre système.")
 
-    col_p1, _, col_p2 = st.columns([0.465, 0.025, 0.51])
+    col_p1, _, col_p2 = st.columns([0.465, 0.025, 0.515])
 
     with col_p1:
         change_mean_returns(mean_returns)

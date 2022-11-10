@@ -565,7 +565,7 @@ def write():
                         title={'text': f"<b>Household income available for spending after retirement <br> (in 2020 $, {nsim} realizations)</b>",
                                 'x': 0.5, 'xanchor': 'center', 'yanchor': 'bottom'},
                         xaxis_tickformat=",",
-                        xaxis_title=f"<b>Probability of exceeding the selected low and high replacement rates,<br>respectively: {pr_low}% and {pr_high}%</b>",
+                        xaxis_title=f"<b>Probability of exceeding the selected <br> low and high replacement rates, respectively: {pr_low}% and {pr_high}%</b>",
                         xaxis_title_font_size=14,
                         xaxis_range=[cons_after.min()-500, cons_after.max()+500],
                         yaxis=dict(range=[0, 2], visible= False, showticklabels=False),
@@ -633,7 +633,7 @@ def write():
             line=dict(color="Green", width=2, dash='dot')))
 
         fig.update_layout(height=500, width=700,
-                        title={'text': f"<b>Household income available for spending before and after retirement <br> under alternative scenarios (in 2020 $)</b>",
+                        title={'text': f"<b>Household income available for spending before <br> and after retirement under alternative scenarios (in 2020 $)</b>",
                                 'x': 0.5,
                                 'xanchor': 'center',
                                 'yanchor': 'top'},
@@ -809,7 +809,7 @@ def write():
     with st.sidebar.expander("DISCLAIMER"):
         st.markdown("Under no circumstances shall the developing team or HEC Montréal, including its employees, officers or directors, be liable for any damages, including without limitation direct, indirect, punitive, incidental, special or consequential damages that result from the use of, or inability to use, the tool or from information provided on the site or from any failure of performance, error, omission, interruption, deletion, defect, delay in operation or transmission, computer virus, communication line failure, theft or destruction or unauthorized access to, alteration of, or use of record.")
 
-    col_p1, _, col_p2 = st.columns([0.465, 0.025, 0.51])
+    col_p1, _, col_p2 = st.columns([0.465, 0.025, 0.515])
 
     with col_p1:
         change_mean_returns(mean_returns)
