@@ -449,13 +449,13 @@ def write():
         fin_prod_list = list(fin_prods_rev.keys())
         
         if which == 'first':
-            label = "Select the financial products you owned at the end of 2019 (total must add up to account balance)"
+            label = f"Select the financial products you owned at the end of 2019 (total must add up to account balance)"
         elif female:
             label = f"Select the financial products she owned at the end of 2019 (total must add up to account balance)"
         else:
             label = f"Select the financial products he owned at the end of 2019 (total must add up to account balance)"
             
-        fin_prod_select = st.multiselect(label= label, options=fin_prod_list,
+        fin_prod_select = st.multiselect(label=label, options=fin_prod_list,
                                          key="fin_prod_list_"+ account +"_"+which)
         if not fin_prod_select:
             st.error("No financial product selected. IF NO PRODUCTS ARE SELECTED, a default allocation will be implemented for this account type.")
@@ -572,7 +572,7 @@ def write():
                         font=dict(size=14, color="Black"),
                         legend={'traceorder':'reversed'})
         
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
 
         with st.expander("HOW TO READ THIS FIGURE"):
             st.markdown("""
@@ -646,7 +646,7 @@ def write():
         st.text("")
         st.text("")
         st.text("")
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
         with st.expander("HOW TO READ THIS FIGURE"):
             st.markdown("""
                 * This figure shows household income available for spending before retirement and after, for the main realization of the stochastic processes for earnings and asset/investment returns (the deterministic case – which differs from the mean of the 25 stochastic realizations in Figure 1). “Before retirement” is defined as the year when the first spouse to retire is age 55, or the year before he/she retires if earlier — but no sooner than 2020. “After retirement” is defined as the year when the last spouse to retire is age 65, or his/her retirement year if later.
@@ -715,7 +715,7 @@ def write():
                     target = target,
                     value = value,
                     hovertemplate='$%{value:,.0f}<extra></extra>')
-        node = dict(label = label, pad=20, thickness=50,
+        node = dict(label=label, pad=20, thickness=50,
                     hovertemplate='$%{value:,.0f}<extra></extra>',
                     color=color_nodes)
 
@@ -734,7 +734,7 @@ def write():
         st.text("")
         st.text("")
         st.text("")
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
         with st.expander("HOW TO READ THIS FIGURE"):
             st.markdown("""
                 * This figure shows the decomposition of your household’s income in retirement:

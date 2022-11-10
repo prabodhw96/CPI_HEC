@@ -110,7 +110,7 @@ def write():
                        'Certificat ou diplôme universitaire de niveau inférieur au baccalauréat': 'university',
                        "Baccalauréat": 'university',
                        'Certificat ou diplôme universitaire de niveau supérieur au baccalauréat': 'university'}
-        degree = st.selectbox("Scolarité (dernier diplôme obtenu)", list(d_education.keys()),
+        degree = st.selectbox(label="Scolarité (dernier diplôme obtenu)", options=list(d_education.keys()),
                               key="education_"+which, help="Utilisé pour projeter les revenus de travail")
         d['education'] = d_education[degree]
         d['init_wage'] = st.number_input(
@@ -452,13 +452,13 @@ def write():
         fin_prod_list = list(fin_prods_rev.keys())
         
         if which == 'first':
-            label = "Sélectionner les produits financiers que vous déteniez à la fin de 2019 (le total doit être égal au solde du compte)"
+            label = f"Sélectionner les produits financiers que vous déteniez à la fin de 2019 (le total doit être égal au solde du compte)"
         elif female:
             label = f"Sélectionner les produits financiers que votre conjointe détenait à la fin de 2019 (le total doit être égal au solde du compte)"
         else:
             label = f"Sélectionner les produits financiers que votre conjoint détenait à la fin de 2019 (le total doit être égal au solde du compte)"
             
-        fin_prod_select = st.multiselect(label= label, options=fin_prod_list,
+        fin_prod_select = st.multiselect(label=label, options=fin_prod_list,
                                          key="fin_prod_list_"+ account +"_"+which)
         if not fin_prod_select:
             st.error("Aucun produit financier sélectionné. SI AUCUN PRODUIT N’EST SÉLECTIONNÉ, une allocation par défaut sera mise en œuvre pour ce type de compte.")
@@ -576,7 +576,7 @@ def write():
                         font=dict(size=14, color="Black"),
                         legend={'traceorder':'reversed'})
         
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
 
         with st.expander("COMMENT LIRE CETTE FIGURE"):
             st.markdown("""
@@ -650,7 +650,7 @@ def write():
         st.text("")
         st.text("")
         st.text("")
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
         with st.expander("COMMENT LIRE CETTE FIGURE"):
             st.markdown("""
                 * Cette figure montre le revenu disponible pour les dépenses du ménage avant et après la retraite, pour la réalisation principale des processus stochastiques pour les revenus de travail et les rendements sur les actifs / placements (le cas déterministe – qui diffère de la moyenne des 25 réalisations de la Figure 1). « Avant la retraite » réfère à l’année où le premier conjoint à prendre sa retraite a 55 ans, ou l’année avant sa retraite si celle-ci survient plus tôt – mais cette année ne peut jamais être antérieure à 2020. « Après la retraite » réfère à l’année dans laquelle le dernier conjoint à prendre sa retraite a 65 ans, ou l’année de sa retraite  si celle-ci survient plus tard.
@@ -721,7 +721,7 @@ def write():
                     target = target,
                     value = value,
                     hovertemplate='$%{value:,.0f}<extra></extra>')
-        node = dict(label = label, pad=20, thickness=50,
+        node = dict(label=label, pad=20, thickness=50,
                     hovertemplate='$%{value:,.0f}<extra></extra>',
                     color=color_nodes)
 
@@ -740,7 +740,7 @@ def write():
         st.text("")
         st.text("")
         st.text("")
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
         with st.expander("COMMENT LIRE CETTE FIGURE"):
             st.markdown("""
                 * Cette figure montre la décomposition du revenu à la retraite de votre ménage :
